@@ -2,6 +2,7 @@ import { ThemeProvider } from "@emotion/react";
 import { Box, createTheme, styled } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import InfoPanel from "./components/InfoPanel";
+import Header from "./components/Header";
 
 const AppContainer = styled(Box)(() => ({
     display: "flex",
@@ -40,7 +41,7 @@ function App() {
         <ThemeProvider theme={theme}>
             <AppContainer>
                 <CssBaseline />
-
+                <Header />
                 <InfoPanel
                     imageProperties={{
                         width: 1920,
