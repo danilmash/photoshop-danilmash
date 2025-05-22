@@ -40,6 +40,7 @@ function App() {
         <ThemeProvider theme={theme}>
             <AppContainer>
                 <CssBaseline />
+
                 <InfoPanel
                     imageProperties={{
                         width: 1920,
