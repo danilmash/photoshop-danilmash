@@ -1,4 +1,5 @@
 import { GB7Data } from "../types/interfaces";
+import getColorDepth from "./getColorDepth";
 
 export async function isGB7Format(file: File): Promise<boolean> {
     const buffer = await file.arrayBuffer();
@@ -43,8 +44,7 @@ export async function parseGB7(file: File): Promise<GB7Data> {
     const height = view.getUint16(8, false); // Высота
     // const reservedByte1 = view.getUint8(10); // Зарезервированный байт 0 // Не используется
     // const reservedByte2 = view.getUint8(11); // Зарезервированный байт 1 // Не используется
-    const colorDepth = maskFlag ? 8 : 7; // Глубина цвета
-
+    const colorDepth = await getColorDepth(file);
     const pixelCount = width * height; // Количество байт пикселей после метаданных
     const imageData = new ImageData(width, height); // Создаем объект ImageData
     for (let i = 0; i < pixelCount; i++) {
