@@ -1,6 +1,7 @@
 import { GB7Data } from "../types/interfaces";
 
-export function isGB7Format(buffer: ArrayBuffer): boolean {
+export async function isGB7Format(file: File): Promise<boolean> {
+    const buffer = await file.arrayBuffer();
     const view = new Uint8Array(buffer);
     // Проверка первых 4 байтов на соответствие сигнатуре GB7
     const magicNumber = [0x47, 0x42, 0x37, 0x1d]; // Сигнатура GB7
@@ -28,7 +29,12 @@ function convertGB7PixelToRGBA(
     return [grayScale, grayScale, grayScale, alpha]; // Возвращаем цвет в формате RGBA
 }
 
-export function parseGB7(buffer: ArrayBuffer): GB7Data {
+export async function parseGB7(file: File): Promise<GB7Data> {
+    const buffer = await file.arrayBuffer();
+    if (!isGB7Format(file)) {
+        throw new Error("Файл не в формате GB7");
+    }
+
     const view = new DataView(buffer);
     const version = view.getUint8(4); // Байт версии
     const flagByte = view.getUint8(5); // Байт флагов
