@@ -3,7 +3,7 @@ import { Box, createTheme, styled } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import InfoPanel from "./components/InfoPanel";
 import Header from "./components/Header";
-
+import Workspace from "./components/Workspace";
 const AppContainer = styled(Box)(() => ({
     display: "flex",
     flexDirection: "column",
@@ -42,6 +42,9 @@ function App() {
             <AppContainer>
                 <CssBaseline />
                 <Header />
+                <Box sx={{ flexGrow: 1 }}>
+                    <Workspace />
+                </Box>
                 <InfoPanel
                     imageProperties={{
                         width: 1920,
