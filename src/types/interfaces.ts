@@ -13,4 +13,12 @@ interface GB7Data {
     imageData: ImageData;
 }
 
-export type { ImageProperties, GB7Data };
+interface CanvasImageData {
+    imageData: ImageData | null;
+    source: string | null | File;
+    width: number;
+    height: number;
+    colorDepth: number;
+}
+
+export type { ImageProperties, GB7Data, CanvasImageData };
