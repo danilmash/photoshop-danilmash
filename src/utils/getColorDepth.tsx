@@ -13,9 +13,21 @@ async function getColorDepth(file: File): Promise<number> {
     if (file.type === "image/png") {
         const arrayBuffer = await file.arrayBuffer();
         const bytes = new Uint8Array(arrayBuffer);
-
         const bitDepth = bytes[24]; // 25-й байт в PNG - это битовая глубина
-        return bitDepth;
+        const colorType = bytes[25]; // Тип цвета (определяет количество каналов)
+
+        // Определяем количество каналов по colorType
+        const channels =
+            {
+                0: 1, // Grayscale
+                2: 3, // RGB
+                3: 1, // Indexed color (palette) — фактически 1, палитра хранится отдельно
+                4: 2, // Grayscale + Alpha
+                6: 4, // RGBA
+            }[colorType] ?? 0;
+
+        const colorDepth = bitDepth * channels;
+        return colorDepth;
     }
 
     if (file.type === "image/jpeg" || file.type === "image/jpg") {
