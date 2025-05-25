@@ -1,10 +1,3 @@
-interface ImageProperties {
-    width: number;
-    height: number;
-    colorDepth: number;
-    format: string;
-}
-
 interface GB7Data {
     width: number;
     height: number;
@@ -19,6 +12,7 @@ interface CanvasImageData {
     width: number;
     height: number;
     colorDepth: number;
+    format: string | null;
 }
 
-export type { ImageProperties, GB7Data, CanvasImageData };
+export type { GB7Data, CanvasImageData };

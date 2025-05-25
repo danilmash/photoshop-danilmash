@@ -19,6 +19,7 @@ const ImageDataProvider: React.FC<{ children: React.ReactNode }> = ({
         width: 0,
         height: 0,
         colorDepth: 0,
+        format: "",
     });
 
     return (

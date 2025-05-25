@@ -45,14 +45,7 @@ function App() {
                 <Box sx={{ flexGrow: 1 }}>
                     <Workspace />
                 </Box>
-                <InfoPanel
-                    imageProperties={{
-                        width: 1920,
-                        height: 1080,
-                        colorDepth: 24,
-                        format: "JPEG",
-                    }}
-                ></InfoPanel>
+                <InfoPanel></InfoPanel>
             </AppContainer>
         </ThemeProvider>
     );
