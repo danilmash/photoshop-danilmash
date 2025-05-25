@@ -3,25 +3,12 @@ import Button from "@mui/material/Button";
 import InfoOutlineIcon from "@mui/icons-material/InfoOutline";
 import { Tooltip } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { isGB7Format } from "../utils/GB7Parser";
+import { parseGB7 } from "../utils/GB7Parser";
+import { useImageData } from "../contexts/ImageDataContext";
+import loadImageFromFile from "../utils/loadImageFromFile";
 
 function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
-    const supportedFormats = ["PNG", "JPEG", "JPG", "GB7"];
-    const tooltipText = `Поддерживаемые форматы: ${supportedFormats.join(
-        ", "
-    )}`;
-
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const handleButtonClick = () => {
-        fileInputRef.current?.click();
-    };
-    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        if (!files || files.length === 0) {
-            // Пользователь отменил выбор файла
-            return;
-        }
-    };
-
     const StyledButton = styled(Button)(({ theme }) => ({
         color:
             props.buttonType === "outlined"
@@ -42,6 +29,40 @@ function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
                     : undefined,
         },
     }));
+    const supportedFormats = ["PNG", "JPEG", "JPG", "GB7"];
+    const tooltipText = `Поддерживаемые форматы: ${supportedFormats.join(
+        ", "
+    )}`;
+
+    const { setImage } = useImageData();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const handleButtonClick = () => {
+        fileInputRef.current?.click();
+    };
+    async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+        const files = event.target.files;
+        if (!files || files.length === 0) {
+            // Пользователь отменил выбор файла
+            return;
+        }
+
+        const file = files[0];
+
+        if (await isGB7Format(file)) {
+            const gb7Data = await parseGB7(file);
+            setImage({
+                width: gb7Data.width,
+                height: gb7Data.height,
+                source: file,
+                colorDepth: gb7Data.colorDepth,
+                format: "GB7",
+                imageData: gb7Data.imageData,
+            });
+        } else {
+            const imageData = await loadImageFromFile(file);
+            setImage(imageData);
+        }
+    }
 
     return (
         <>
