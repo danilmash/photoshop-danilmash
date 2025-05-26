@@ -1,68 +1,75 @@
-import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { Box } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import React from "react";
 
 function Workspace() {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [minPercent, setMinPercent] = useState(10); // fallback
-    const [maxPercent, setMaxPercent] = useState(20); // fallback
+    const [leftWidth, setLeftWidth] = useState(
+        Number(localStorage.getItem("left_panel_width")) || 300
+    ); // начальная ширина
 
-    // Рассчитать процент от пикселей
-    useEffect(() => {
-        const minPx = 350;
-        const maxPx = 600;
-        console.log(123);
-        const windowresize = () => {
-            if (containerRef.current) {
-                const width = containerRef.current.offsetWidth;
-                const minPercent = (minPx / width) * 100;
-                setMinPercent(minPercent);
-            }
-            if (containerRef.current) {
-                const width = containerRef.current.offsetWidth;
-                const maxPercent = (maxPx / width) * 100;
-                setMaxPercent(maxPercent);
-            }
-        };
-        windowresize();
-        window.addEventListener("resize", windowresize);
+    const isResizing = useRef(false);
 
-        return () => {
-            window.removeEventListener("resize", windowresize);
-        };
-    }, [window.innerWidth]);
+    const handleMouseDown = (e: React.MouseEvent) => {
+        isResizing.current = true;
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", handleMouseUp);
+        e.preventDefault();
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+        if (!isResizing.current || !containerRef.current) return;
+        const containerLeft = containerRef.current.getBoundingClientRect().left;
+        const newWidth = e.clientX - containerLeft;
+        // Ограничения по ширине
+        if (newWidth >= 200 && newWidth <= 600) {
+            localStorage.setItem("left_panel_width", newWidth.toString());
+            setLeftWidth(newWidth);
+        }
+    };
+
+    const handleMouseUp = () => {
+        isResizing.current = false;
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
+    };
 
     return (
-        <Box ref={containerRef} sx={{ height: "100%" }}>
-            <PanelGroup direction="horizontal" style={{ height: "100%" }}>
-                <Panel
-                    defaultSize={50}
-                    minSize={minPercent}
-                    maxSize={maxPercent}
-                >
-                    <Box
-                        sx={{
-                            backgroundColor: "#f0f0f0",
-                            height: "100%",
-                            padding: 2,
-                        }}
-                    >
-                        Left Panel
-                    </Box>
-                </Panel>
-                <PanelResizeHandle />
-                <Panel defaultSize={50} minSize={20} maxSize={90}>
-                    <Box
-                        sx={{
-                            backgroundColor: "#e0e0e0",
-                            height: "100%",
-                            padding: 2,
-                        }}
-                    >
-                        Right Panel
-                    </Box>
-                </Panel>
-            </PanelGroup>
+        <Box
+            ref={containerRef}
+            sx={{ height: "100%", display: "flex", position: "relative" }}
+        >
+            {/* Левая панель */}
+            <Box
+                sx={{
+                    width: `${leftWidth}px`,
+                    backgroundColor: "#f0f0f0",
+                    height: "100%",
+                    overflow: "auto",
+                    padding: 2,
+                }}
+            >
+                Left Panel
+            </Box>
+
+            {/* Ручка ресайза */}
+            <Box
+                onMouseDown={handleMouseDown}
+                sx={{
+                    width: "5px",
+                    cursor: "col-resize",
+                    backgroundColor: "#ccc",
+                    zIndex: 10,
+                }}
+            />
+
+            {/* Правая панель (остальная часть) */}
+            <Box
+                sx={{
+                    height: "100%",
+                    width: `calc(100% - ${leftWidth + 5}px)`, // 5px для ручки ресайза
+                }}
+            ></Box>
         </Box>
     );
 }
