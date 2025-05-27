@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
 import { useRef, useState } from "react";
+import Canvas from "./Canvas";
 import React from "react";
 
 function Workspace() {
@@ -69,7 +70,9 @@ function Workspace() {
                     height: "100%",
                     width: `calc(100% - ${leftWidth + 5}px)`, // 5px для ручки ресайза
                 }}
-            ></Box>
+            >
+                <Canvas />
+            </Box>
         </Box>
     );
 }
