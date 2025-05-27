@@ -18,6 +18,7 @@ async function loadImageFromFile(file: File): Promise<CanvasImageData> {
 
     return {
         imageData,
+        imageBitmap,
         source: file,
         width: canvas.width,
         height: canvas.height,

@@ -58,11 +58,14 @@ export async function parseGB7(file: File): Promise<GB7Data> {
         imageData.data[pixelIndex + 3] = a; // Альфа
     }
 
+    const imageBitmap = await createImageBitmap(imageData);
+
     return {
         width,
         height,
         colorDepth,
         version,
         imageData,
+        imageBitmap,
     };
 }

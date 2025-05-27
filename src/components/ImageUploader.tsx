@@ -57,6 +57,7 @@ function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
                 colorDepth: gb7Data.colorDepth,
                 format: "GB7",
                 imageData: gb7Data.imageData,
+                imageBitmap: gb7Data.imageBitmap,
             });
         } else {
             const imageData = await loadImageFromFile(file);

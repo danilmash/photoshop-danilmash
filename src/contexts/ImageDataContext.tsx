@@ -15,6 +15,7 @@ const ImageDataProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
     const [image, setImage] = useState<CanvasImageData>({
         imageData: null,
+        imageBitmap: null,
         source: null,
         width: 0,
         height: 0,

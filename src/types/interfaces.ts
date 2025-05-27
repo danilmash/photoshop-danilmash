@@ -4,10 +4,12 @@ interface GB7Data {
     colorDepth: number;
     version: number;
     imageData: ImageData;
+    imageBitmap: ImageBitmap;
 }
 
 interface CanvasImageData {
     imageData: ImageData | null;
+    imageBitmap: ImageBitmap | null;
     source: string | null | File;
     width: number;
     height: number;
