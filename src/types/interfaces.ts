@@ -17,4 +17,11 @@ interface CanvasImageData {
     format: string | null;
 }
 
-export type { GB7Data, CanvasImageData };
+// Интерфейс для работы с массивом пикселей
+interface PixelArray {
+    data: Uint8ClampedArray;
+    width: number;
+    height: number;
+}
+
+export type { GB7Data, CanvasImageData, PixelArray };
