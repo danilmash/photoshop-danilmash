@@ -4,6 +4,8 @@ import { CanvasImageData } from "../types/interfaces";
 interface ImageDataContextType {
     image: CanvasImageData;
     setImage: (image: CanvasImageData) => void;
+    baseImage: CanvasImageData;
+    setBaseImage: (image: CanvasImageData) => void;
 }
 
 const ImageDataContext = createContext<ImageDataContextType | undefined>(
@@ -23,8 +25,20 @@ const ImageDataProvider: React.FC<{ children: React.ReactNode }> = ({
         format: "",
     });
 
+    const [baseImage, setBaseImage] = useState<CanvasImageData>({
+        imageData: null,
+        imageBitmap: null,
+        source: null,
+        width: 0,
+        height: 0,
+        colorDepth: 0,
+        format: "",
+    });
+
     return (
-        <ImageDataContext.Provider value={{ image, setImage }}>
+        <ImageDataContext.Provider
+            value={{ image, setImage, baseImage, setBaseImage }}
+        >
             {children}
         </ImageDataContext.Provider>
     );

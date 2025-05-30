@@ -34,7 +34,7 @@ function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
         ", "
     )}`;
 
-    const { setImage } = useImageData();
+    const { setImage, setBaseImage } = useImageData();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const handleButtonClick = () => {
         fileInputRef.current?.click();
@@ -59,9 +59,20 @@ function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
                 imageData: gb7Data.imageData,
                 imageBitmap: gb7Data.imageBitmap,
             });
+
+            setBaseImage({
+                width: gb7Data.width,
+                height: gb7Data.height,
+                source: file,
+                colorDepth: gb7Data.colorDepth,
+                format: "GB7",
+                imageData: gb7Data.imageData,
+                imageBitmap: gb7Data.imageBitmap,
+            });
         } else {
             const imageData = await loadImageFromFile(file);
             setImage(imageData);
+            setBaseImage(imageData);
         }
     }
 
