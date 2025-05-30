@@ -1,12 +1,14 @@
 import { styled } from "@mui/material/styles";
 import { Box, Divider, Typography } from "@mui/material";
 import { useImageData } from "../contexts/ImageDataContext";
+import ImageResizeSlider from "./ImageResizeSlider";
 
 const InfoPanelStyle = styled(Box)(({ theme }) => ({
-    padding: "4px 16px",
+    padding: "8px 16px",
     display: "flex",
     gap: "8px",
     alignItems: "center",
+    height: "48px",
     backgroundColor: theme.palette.primary.main,
     color: theme.palette.primary.contrastText,
 }));
@@ -35,6 +37,10 @@ function InfoPanel() {
             </Typography>
             <Divider orientation="vertical" flexItem></Divider>
             <Typography variant="body1">Формат: {format}</Typography>
+
+            <Box sx={{ marginLeft: "auto" }}>
+                <ImageResizeSlider />
+            </Box>
         </InfoPanelStyle>
     );
 }
