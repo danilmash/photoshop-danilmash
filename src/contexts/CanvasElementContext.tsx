@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useRef, useCallback } from "react";
+import React, {
+    createContext,
+    useContext,
+    useRef,
+    useCallback,
+    useEffect,
+} from "react";
+import { useImageData } from "./ImageDataContext";
 
 interface CanvasElementContextType {
     canvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -21,6 +28,59 @@ const CanvasElementProvider: React.FC<{ children: React.ReactNode }> = ({
     const offsetX = useRef(0);
     const offsetY = useRef(0);
     const imageBitmapRef = useRef<ImageBitmap | null>(null);
+    const { image } = useImageData();
+    useEffect(() => {
+        if (image?.imageBitmap) {
+            imageBitmapRef.current = image.imageBitmap;
+            render();
+        }
+    }, [image]);
+
+    const containerRef = useRef<HTMLElement>(null);
+    const firstRender = useRef(true);
+    const containerWidth = useRef(0);
+    const currentWindowWidth = useRef(window.innerWidth);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+
+        if (!canvas) return;
+
+        containerRef.current = canvas.parentElement;
+
+        if (!containerRef.current) return;
+
+        const resize = () => {
+            const rect = containerRef.current!.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            render();
+        };
+
+        const observer = new ResizeObserver((entries) => {
+            if (
+                !firstRender.current &&
+                currentWindowWidth.current === window.innerWidth
+            ) {
+                const entry = entries[0];
+                offsetX.current += Math.floor(
+                    entry.contentRect.width - containerWidth.current
+                );
+            } else if (firstRender.current) {
+                firstRender.current = false;
+            }
+            currentWindowWidth.current = window.innerWidth;
+            containerWidth.current = entries[0].contentRect.width;
+            resize();
+        });
+
+        observer.observe(containerRef.current);
+        resize();
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [image]);
 
     const render = useCallback(() => {
         const canvas = canvasRef.current;
