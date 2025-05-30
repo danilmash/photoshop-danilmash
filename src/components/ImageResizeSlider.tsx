@@ -32,20 +32,20 @@ const Slider = styled(MuiSlider)(({ theme }) => ({
 }));
 
 export default function ImageResizeSlider() {
-    const { canvasRef } = useCanvasElement();
+    const { canvasRef, offsetX } = useCanvasElement();
     const { image, setImage, baseImage } = useImageData();
-    const imageWidth = image.width;
-    const imageHeight = image.height;
+    const imageWidth = baseImage.width;
+    const imageHeight = baseImage.height;
     const canvasWidth = canvasRef.current?.width || 0;
     const canvasHeight = canvasRef.current?.height || 0;
     const maxWidth = canvasWidth - 100; // 100px for padding
     const maxHeight = canvasHeight - 100; // 100px for padding
 
     React.useEffect(() => {
+        offsetX.current = 0;
         const scaleWidth = (maxWidth / imageWidth) * 100;
         const scaleHeight = (maxHeight / imageHeight) * 100;
         const scale = Math.min(scaleWidth, scaleHeight);
-
         setValue(Math.floor(clamp(scale, 12, 300)));
     }, [imageWidth, canvasWidth, baseImage]);
 
@@ -73,13 +73,15 @@ export default function ImageResizeSlider() {
                 );
                 const newImageData = new ImageData(
                     newPixelArray.data,
-                    newWidth,
-                    newHeight
+                    newPixelArray.width,
+                    newPixelArray.height
                 );
                 setImage({
                     ...image,
                     imageBitmap: await createImageBitmap(newImageData),
                     imageData: newImageData,
+                    width: newImageData.width,
+                    height: newImageData.height,
                 });
             }
         };
