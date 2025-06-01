@@ -5,7 +5,6 @@ import { useTools } from "../contexts/ToolsContext";
 import { useCanvasElement } from "../contexts/CanvasElementContext";
 import { useEffect } from "react";
 import { useImageData } from "../contexts/ImageDataContext";
-import pipette from "../assets/pipette.png";
 function Toolbar() {
     const { activeTool, setActiveTool } = useTools();
     const { canvasRef } = useCanvasElement();
@@ -33,7 +32,7 @@ function Toolbar() {
             return;
         }
         if (activeTool === "eyedropper") {
-            canvas.style.cursor = `url(${pipette}) 0 16, auto`;
+            canvas.style.cursor = "crosshair";
             return;
         }
     }

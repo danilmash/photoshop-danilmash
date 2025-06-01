@@ -36,6 +36,7 @@ function EyedropperTool() {
         const y = Math.round(
             event.clientY - rect.top - canvas.height / 2 + image.height / 2
         );
+        if (x < 0 || x > image.width || y < 0 || y > image.height) return;
         const color = getColor({ x, y });
         if (!color) return;
         const colorType =
