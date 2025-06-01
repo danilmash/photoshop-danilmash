@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import Canvas from "./Canvas";
 import React from "react";
 import Toolbar from "./Toolbar";
+import ColorInfoPanel from "./ColorInfoPanel";
 function Workspace() {
     const containerRef = useRef<HTMLDivElement>(null);
     const [leftWidth, setLeftWidth] = useState(
@@ -48,9 +49,14 @@ function Workspace() {
                     height: "100%",
                     overflow: "auto",
                     padding: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
                 }}
             >
                 <Toolbar />
+
+                <ColorInfoPanel />
             </Box>
 
             {/* Ручка ресайза */}

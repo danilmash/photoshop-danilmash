@@ -4,7 +4,7 @@ export function rgbToXYZ(
     r: number,
     g: number,
     b: number
-): [number, number, number] {
+): { x: number; y: number; z: number } {
     r /= 255;
     g /= 255;
     b /= 255;
@@ -20,7 +20,7 @@ export function rgbToXYZ(
     const y = r * 0.2126729 + g * 0.7151522 + b * 0.072175;
     const z = r * 0.0193339 + g * 0.119192 + b * 0.9503041;
 
-    return [x, y, z];
+    return { x, y, z };
 }
 
 function xyzToLinearRgb(
@@ -63,18 +63,18 @@ export function oklabToOklch(
     L: number,
     a: number,
     b: number
-): [number, number, number] {
+): { L: number; C: number; h: number } {
     const C = Math.sqrt(a * a + b * b);
     let h = Math.atan2(b, a) * (180 / Math.PI);
     if (h < 0) h += 360;
-    return [L, C, h];
+    return { L, C, h };
 }
 
 export function xyzToLab(
     x: number,
     y: number,
     z: number
-): [number, number, number] {
+): { L: number; a: number; b: number } {
     const refX = 95.047;
     const refY = 100.0;
     const refZ = 108.883;
@@ -98,24 +98,28 @@ export function xyzToLab(
     const a = 500 * (fx - fy);
     const b = 200 * (fy - fz);
 
-    return [L, a, b];
+    return { L, a, b };
 }
 
-function labToLch(l: number, a: number, b: number): [number, number, number] {
+function labToLch(
+    L: number,
+    a: number,
+    b: number
+): { L: number; c: number; h: number } {
     const c = Math.sqrt(a * a + b * b);
     let h = Math.atan2(b, a) * (180 / Math.PI);
     if (h < 0) {
         h += 360;
     }
-    return [l, c, h];
+    return { L, c, h };
 }
 
 export function rgbToLab(
     r: number,
     g: number,
     b: number
-): [number, number, number] {
-    const [x, y, z] = rgbToXYZ(r, g, b);
+): { L: number; a: number; b: number } {
+    const { x, y, z } = rgbToXYZ(r, g, b);
     return xyzToLab(x, y, z);
 }
 
@@ -123,17 +127,17 @@ export function rgbToLch(
     r: number,
     g: number,
     b: number
-): [number, number, number] {
-    const [l, a, bValue] = rgbToLab(r, g, b);
-    return labToLch(l, a, bValue);
+): { L: number; c: number; h: number } {
+    const { L, a, b: bValue } = rgbToLab(r, g, b);
+    return labToLch(L, a, bValue);
 }
 
 export function rgbToOklch(
     r: number,
     g: number,
     b: number
-): [number, number, number] {
-    const [x, y, z] = rgbToXYZ(r, g, b);
+): { L: number; C: number; h: number } {
+    const { x, y, z } = rgbToXYZ(r, g, b);
     const [lr, lg, lb] = xyzToLinearRgb(x, y, z);
     const [L, a, b_] = linearRgbToOklab(lr, lg, lb);
     return oklabToOklch(L, a, b_);
@@ -154,7 +158,7 @@ function calculateRelativeLuminance(r: number, g: number, b: number): number {
     return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
 }
 
-function calculateContrast(
+export function calculateContrast(
     primaryColor: { r: number; g: number; b: number },
     secondaryColor: { r: number; g: number; b: number }
 ): number {
