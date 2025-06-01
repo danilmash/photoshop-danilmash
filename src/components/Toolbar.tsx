@@ -1,5 +1,6 @@
 import { Paper, Typography } from "@mui/material";
 import PanTool from "./canvas tools/PanTool";
+import EyedropperTool from "./canvas tools/EyedropperTool";
 import { useTools } from "../contexts/ToolsContext";
 import { useCanvasElement } from "../contexts/CanvasElementContext";
 import { useEffect } from "react";
@@ -38,11 +39,13 @@ function Toolbar() {
     }
 
     useEffect(() => {
+        if (!image.imageBitmap) return;
         setActiveTool(activeTool || "pan");
         setCursor();
     }, [image]);
 
     useEffect(() => {
+        if (!image.imageBitmap) return;
         resetCursor();
         setCursor();
     }, [activeTool]);
@@ -75,6 +78,7 @@ function Toolbar() {
             }}
         >
             <PanTool />
+            <EyedropperTool />
         </Paper>
     );
 }
