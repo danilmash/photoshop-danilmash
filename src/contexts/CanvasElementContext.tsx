@@ -37,17 +37,12 @@ const CanvasElementProvider: React.FC<{ children: React.ReactNode }> = ({
     }, [image]);
 
     const containerRef = useRef<HTMLElement>(null);
-    const firstRender = useRef(true);
-    const containerWidth = useRef(0);
-    const currentWindowWidth = useRef(window.innerWidth);
 
     useEffect(() => {
         const canvas = canvasRef.current;
-
         if (!canvas) return;
 
         containerRef.current = canvas.parentElement;
-
         if (!containerRef.current) return;
 
         const resize = () => {
@@ -57,20 +52,7 @@ const CanvasElementProvider: React.FC<{ children: React.ReactNode }> = ({
             render();
         };
 
-        const observer = new ResizeObserver((entries) => {
-            if (
-                !firstRender.current &&
-                currentWindowWidth.current === window.innerWidth
-            ) {
-                const entry = entries[0];
-                offsetX.current += Math.floor(
-                    entry.contentRect.width - containerWidth.current
-                );
-            } else if (firstRender.current) {
-                firstRender.current = false;
-            }
-            currentWindowWidth.current = window.innerWidth;
-            containerWidth.current = entries[0].contentRect.width;
+        const observer = new ResizeObserver(() => {
             resize();
         });
 
