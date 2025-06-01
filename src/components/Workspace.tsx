@@ -2,7 +2,7 @@ import { Box } from "@mui/material";
 import { useRef, useState } from "react";
 import Canvas from "./Canvas";
 import React from "react";
-
+import Toolbar from "./Toolbar";
 function Workspace() {
     const containerRef = useRef<HTMLDivElement>(null);
     const [leftWidth, setLeftWidth] = useState(
@@ -50,7 +50,7 @@ function Workspace() {
                     padding: 2,
                 }}
             >
-                Left Panel
+                <Toolbar />
             </Box>
 
             {/* Ручка ресайза */}

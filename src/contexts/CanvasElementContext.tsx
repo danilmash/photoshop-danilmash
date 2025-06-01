@@ -87,7 +87,7 @@ const CanvasElementProvider: React.FC<{ children: React.ReactNode }> = ({
         if (bitmap) {
             const x = canvas.width / 2 - bitmap.width / 2;
             const y = canvas.height / 2 - bitmap.height / 2;
-            ctx.drawImage(bitmap, x - offsetX.current / 2, y);
+            ctx.drawImage(bitmap, x, y);
         }
     }, []);
 

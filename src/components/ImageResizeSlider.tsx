@@ -32,7 +32,7 @@ const Slider = styled(MuiSlider)(({ theme }) => ({
 }));
 
 export default function ImageResizeSlider() {
-    const { canvasRef, offsetX } = useCanvasElement();
+    const { canvasRef, offsetX, offsetY } = useCanvasElement();
     const { image, setImage, baseImage } = useImageData();
     const imageWidth = baseImage.width;
     const imageHeight = baseImage.height;
@@ -43,6 +43,7 @@ export default function ImageResizeSlider() {
 
     React.useEffect(() => {
         offsetX.current = 0;
+        offsetY.current = 0;
         const scaleWidth = (maxWidth / imageWidth) * 100;
         const scaleHeight = (maxHeight / imageHeight) * 100;
         const scale = Math.min(scaleWidth, scaleHeight);
