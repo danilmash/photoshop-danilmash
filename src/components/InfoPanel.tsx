@@ -2,6 +2,7 @@ import { styled } from "@mui/material/styles";
 import { Box, Divider, Typography } from "@mui/material";
 import { useImageData } from "../contexts/ImageDataContext";
 import ImageResizeSlider from "./ImageResizeSlider";
+import ImageResizeModal from "./ImageResizeModal";
 
 const InfoPanelStyle = styled(Box)(({ theme }) => ({
     padding: "8px 16px",
@@ -16,6 +17,7 @@ const InfoPanelStyle = styled(Box)(({ theme }) => ({
 function InfoPanel() {
     const { image } = useImageData();
     const { width, height, colorDepth, format } = image;
+
     if (!width || !height || !colorDepth || !format) {
         return (
             <InfoPanelStyle>
@@ -38,7 +40,12 @@ function InfoPanel() {
             <Divider orientation="vertical" flexItem></Divider>
             <Typography variant="body1">Формат: {format}</Typography>
 
-            <Box sx={{ marginLeft: "auto" }}>
+            <Box sx={{ marginLeft: "auto", display: "flex", gap: "16px" }}>
+                <ImageResizeModal
+                    buttonColor="contrast"
+                    buttonType="outlined"
+                />
+                <Divider orientation="vertical" flexItem></Divider>
                 <ImageResizeSlider />
             </Box>
         </InfoPanelStyle>
