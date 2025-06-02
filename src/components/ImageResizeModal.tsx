@@ -222,7 +222,7 @@ function ImageResizeModal(props: {
     return (
         <>
             <StyledButton variant={props.buttonType} onClick={handleOpen}>
-                Открыть модалку
+                Изменить размер 
             </StyledButton>
             <Dialog open={open} onClose={handleClose}>
                 <DialogTitle>Изменить размер изображения</DialogTitle>
