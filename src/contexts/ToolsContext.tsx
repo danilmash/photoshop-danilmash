@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from "react";
 
-export type ToolType = "pan" | "eyedropper" | undefined;
+export type ToolType = "pan" | "eyedropper" | "curve" | undefined;
 
 interface ToolsContextType {
     activeTool: ToolType;

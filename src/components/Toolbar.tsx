@@ -1,11 +1,13 @@
-import { Paper, Typography } from "@mui/material";
-import PanTool from "./canvas tools/PanTool";
-import EyedropperTool from "./canvas tools/EyedropperTool";
 import { useTools } from "../contexts/ToolsContext";
 import { useCanvasElement } from "../contexts/CanvasElementContext";
 import { useEffect } from "react";
 import { useImageData } from "../contexts/ImageDataContext";
-import CurveDialog from "./canvas tools/CurveDialog";
+import { Box, Paper, Typography } from "@mui/material";
+import PanTool from "./canvas tools/PanTool";
+import EyedropperTool from "./canvas tools/EyedropperTool";
+import CurveTool from "./canvas tools/CurveTool";
+import CurveInfo from "./CurveInfo";
+
 function Toolbar() {
     const { activeTool, setActiveTool } = useTools();
     const { canvasRef } = useCanvasElement();
@@ -66,7 +68,7 @@ function Toolbar() {
     }
 
     return (
-        <>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Paper
                 elevation={3}
                 sx={{
@@ -80,12 +82,11 @@ function Toolbar() {
             >
                 <PanTool />
                 <EyedropperTool />
-                <CurveDialog
-            />
-                
+                <CurveTool />
             </Paper>
             
-        </>
+            <CurveInfo />
+        </Box>
     );
 }
 
