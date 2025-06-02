@@ -59,7 +59,10 @@ function AddLayerModal() {
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
-    const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    const handleTabChange = (
+        _event: React.SyntheticEvent,
+        newValue: number
+    ) => {
         setTabValue(newValue);
     };
 
@@ -92,6 +95,7 @@ function AddLayerModal() {
             imageBitmap: imageBitmap,
             baseImageData: imageData,
             baseImageBitmap: imageBitmap,
+            originalImageData: imageData,
             width: canvas.width,
             height: canvas.height,
             scale: 100,
@@ -102,6 +106,10 @@ function AddLayerModal() {
                 width: canvas.width,
                 height: canvas.height,
             },
+            curvePoints: {
+                point1: { x: 0, y: 0 },
+                point2: { x: 255, y: 255 },
+            },
         });
 
         handleClose();
@@ -109,16 +117,14 @@ function AddLayerModal() {
 
     return (
         <>
-            <StyledButton variant="contained" onClick={handleOpen} 
-                disabled={layers.length >= 2}>
+            <StyledButton
+                variant="contained"
+                onClick={handleOpen}
+                disabled={layers.length >= 2}
+            >
                 Добавить слой
             </StyledButton>
-            <Dialog 
-                open={open} 
-                onClose={handleClose}
-                maxWidth="sm"
-                fullWidth
-            >
+            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
                 <DialogTitle>Добавить новый слой</DialogTitle>
                 <DialogContent>
                     <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
@@ -132,12 +138,22 @@ function AddLayerModal() {
                         </Tabs>
                     </Box>
                     <TabPanel value={tabValue} index={0}>
-                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                            <ImageUploader buttonType="contained" onLoad={handleClose}/>
+                        <Box sx={{ display: "flex", justifyContent: "center" }}>
+                            <ImageUploader
+                                buttonType="contained"
+                                onLoad={handleClose}
+                            />
                         </Box>
                     </TabPanel>
                     <TabPanel value={tabValue} index={1}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: 2,
+                            }}
+                        >
                             <ChromePicker
                                 color={color}
                                 onChange={handleColorChange}
@@ -159,4 +175,4 @@ function AddLayerModal() {
     );
 }
 
-export default AddLayerModal; 
+export default AddLayerModal;
