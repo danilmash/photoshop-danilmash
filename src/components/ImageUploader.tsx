@@ -8,7 +8,7 @@ import { parseGB7 } from "../utils/GB7Parser";
 import loadImageFromFile from "../utils/loadImageFromFile";
 import { useLayers } from "../contexts/LayersContext";
 
-function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
+function ImageUploader(props: { buttonType: "contained" | "outlined", onLoad: () => void }) {
     const StyledButton = styled(Button)(({ theme }) => ({
         color:
             props.buttonType === "outlined"
@@ -34,7 +34,7 @@ function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
         ", "
     )}`;
 
-    const { layers, addLayer } = useLayers();
+    const {  addLayer } = useLayers();
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const handleButtonClick = () => {
@@ -101,6 +101,7 @@ function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
                 },
             });
         }
+        props.onLoad();
     }
 
     return (
@@ -115,7 +116,6 @@ function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
             <StyledButton
                 variant={props.buttonType}
                 onClick={handleButtonClick}
-                disabled={layers.length >= 2}
             >
                 Загрузить изображение
                 <Tooltip title={tooltipText}>

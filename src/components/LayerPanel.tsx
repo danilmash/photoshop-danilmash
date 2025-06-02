@@ -16,7 +16,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { useLayers } from '../contexts/LayersContext';
-import ImageUploader from './ImageUploader';
+import AddLayerModal from './AddLayerModal';
 
 const LayerPanelContainer = styled(Box)(({ theme }) => ({
     height: '100%',
@@ -156,7 +156,7 @@ function LayerPanel() {
         <LayerPanelContainer>
             <LayerHeader>
                 <Typography variant="h6">Слои</Typography>
-                <ImageUploader buttonType="contained" />
+                <AddLayerModal />
             </LayerHeader>
             
             <LayerList>
