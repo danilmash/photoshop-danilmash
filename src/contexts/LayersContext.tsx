@@ -1,5 +1,6 @@
 import { useContext, createContext, useState } from "react";
 import { Layer } from "../types/interfaces";
+import { bilinearInterpolation } from "../utils/interpolation";
 
 interface LayersContextType {
     layers: Layer[];
@@ -9,10 +10,12 @@ interface LayersContextType {
     addLayer: (layer: Layer) => void;
     removeLayer: (id: string) => void;
     updateLayer: (id: string, updates: Partial<Layer>) => void;
+    scaleLayer: (id: string, scale: number) => Promise<void>;
     processLayers: (
         width: number,
-        height: number
-    ) => { imageBitmap: ImageBitmap; imageData: ImageData }; // Опционально, если нужно
+        height: number,
+        scale: number
+    ) => Promise<{ imageBitmap: ImageBitmap; imageData: ImageData }>;
     getMaxWidthAndHeight: () => { width: number; height: number };
 }
 
@@ -32,7 +35,7 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
             prevLayers.filter((layer) => layer.id !== id)
         );
         if (activeLayerId === id) {
-            setActiveLayerId(null);
+            setActiveLayerId(layers[0]?.id || null);
         }
     };
 
@@ -44,27 +47,94 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
         );
     };
 
-    function processLayers(
+    const scaleLayer = async (id: string, scale: number) => {
+        const layer = layers.find(l => l.id === id);
+        if (!layer?.baseImageData) return;
+
+        const originalWidth = layer.baseImageData.width;
+        const originalHeight = layer.baseImageData.height;
+        const scaledWidth = Math.floor((originalWidth * scale) / 100);
+        const scaledHeight = Math.floor((originalHeight * scale) / 100);
+
+        if (scale === 100) {
+            // Для 100% используем оригинальное изображение
+            updateLayer(id, {
+                imageData: layer.baseImageData,
+                imageBitmap: layer.baseImageBitmap,
+                width: originalWidth,
+                height: originalHeight,
+                scale: scale,
+                infoPanel: {
+                    ...layer.infoPanel,
+                    width: originalWidth,
+                    height: originalHeight,
+                },
+            });
+        } else {
+            // Для других масштабов применяем интерполяцию
+            const scaledPixelArray = await bilinearInterpolation(
+                {
+                    data: layer.baseImageData.data,
+                    width: originalWidth,
+                    height: originalHeight,
+                },
+                scaledWidth,
+                scaledHeight
+            );
+
+            const scaledImageData = new ImageData(
+                scaledPixelArray.data,
+                scaledPixelArray.width,
+                scaledPixelArray.height
+            );
+
+            const scaledImageBitmap = await createImageBitmap(scaledImageData);
+
+            updateLayer(id, {
+                imageData: scaledImageData,
+                imageBitmap: scaledImageBitmap,
+                width: scaledWidth,
+                height: scaledHeight,
+                scale: scale,
+                infoPanel: {
+                    ...layer.infoPanel,
+                    width: scaledWidth,
+                    height: scaledHeight,
+                },
+            });
+        }
+    };
+
+    async function processLayers(
         width: number,
-        height: number
-    ): { imageBitmap: ImageBitmap; imageData: ImageData } {
-        const canvas = new OffscreenCanvas(width, height); // Замените на нужные размеры
+        height: number,
+        scale: number
+    ): Promise<{ imageBitmap: ImageBitmap; imageData: ImageData }> {
+        // Создаем канвас с масштабированными размерами
+        const scaledWidth = Math.floor((width * scale) / 100);
+        const scaledHeight = Math.floor((height * scale) / 100);
+        const canvas = new OffscreenCanvas(scaledWidth, scaledHeight);
         const ctx = canvas.getContext("2d");
 
         if (!ctx) {
             throw new Error("Не удалось получить контекст рисования");
         }
-        ctx.clearRect(0, 0, width, height);
-        layers.forEach((layer) => {
-            if (layer.imageBitmap && layer.visible) {
+
+        ctx.clearRect(0, 0, scaledWidth, scaledHeight);
+
+        // Отрисовываем слои в обратном порядке, чтобы верхний слой в панели отрисовывался последним
+        for (let i = layers.length - 1; i >= 0; i--) {
+            const layer = layers[i];
+            if (layer.visible && layer.imageBitmap) {
                 ctx.globalAlpha = layer.opacity;
                 ctx.globalCompositeOperation = layer.blendMode;
                 ctx.drawImage(layer.imageBitmap, 0, 0);
             }
-        });
+        }
 
-        const imageData = ctx.getImageData(0, 0, width, height);
+        const imageData = ctx.getImageData(0, 0, scaledWidth, scaledHeight);
         const imageBitmap = canvas.transferToImageBitmap();
+
         return { imageBitmap, imageData };
     }
 
@@ -77,10 +147,10 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
         }
 
         const maxWidth = Math.max(
-            ...layers.map((layer) => layer.imageBitmap?.width || 0)
+            ...layers.map((layer) => layer.width || 0)
         );
         const maxHeight = Math.max(
-            ...layers.map((layer) => layer.imageBitmap?.height || 0)
+            ...layers.map((layer) => layer.height || 0)
         );
         return { width: maxWidth, height: maxHeight };
     }
@@ -95,6 +165,7 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
                 addLayer,
                 removeLayer,
                 updateLayer,
+                scaleLayer,
                 processLayers,
                 getMaxWidthAndHeight,
             }}

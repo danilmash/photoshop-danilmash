@@ -4,10 +4,10 @@ import Box from "@mui/material/Box";
 import MuiSlider from "@mui/material/Slider";
 import MuiInput from "@mui/material/Input";
 import ZoomIn from "@mui/icons-material/ZoomIn";
-import { useImageData } from "../contexts/ImageDataContext";
 import { useCanvasElement } from "../contexts/CanvasElementContext";
-import { bilinearInterpolation } from "../utils/interpolation";
+import { useLayers } from "../contexts/LayersContext";
 import { clamp } from "../utils/helpers";
+
 const Input = styled(MuiInput)(({ theme }) => ({
     color: theme.palette.primary.contrastText,
     width: "50px",
@@ -33,80 +33,73 @@ const Slider = styled(MuiSlider)(({ theme }) => ({
 
 export default function ImageResizeSlider() {
     const { canvasRef, offsetX, offsetY } = useCanvasElement();
-    const { image, setImage, baseImage } = useImageData();
-    const imageWidth = baseImage.width;
-    const imageHeight = baseImage.height;
+    const { layers, activeLayerId, scaleLayer } = useLayers();
+    const activeLayer = layers.find(layer => layer.id === activeLayerId);
     const canvasWidth = canvasRef.current?.width || 0;
     const canvasHeight = canvasRef.current?.height || 0;
     const maxWidth = canvasWidth - 100; // 100px for padding
     const maxHeight = canvasHeight - 100; // 100px for padding
-
-    React.useEffect(() => {
-        offsetX.current = 0;
-        offsetY.current = 0;
-        const scaleWidth = (maxWidth / imageWidth) * 100;
-        const scaleHeight = (maxHeight / imageHeight) * 100;
-        const scale = Math.min(scaleWidth, scaleHeight);
-        setValue(Math.floor(clamp(scale, 12, 300)));
-    }, [imageWidth, canvasWidth, baseImage]);
-
+    const initialResizeDoneRef = React.useRef(false);
     const [value, setValue] = React.useState(100);
 
     React.useEffect(() => {
-        const resizeImage = async () => {
-            if (
-                canvasRef.current &&
-                image.imageBitmap &&
-                baseImage.imageData?.data
-            ) {
-                const newWidth = Math.floor((imageWidth * value) / 100);
-                const newHeight = Math.floor((imageHeight * value) / 100);
-                const pixelArray = baseImage.imageData.data;
-
-                const newPixelArray = await bilinearInterpolation(
-                    {
-                        data: pixelArray,
-                        width: imageWidth,
-                        height: imageHeight,
-                    },
-                    newWidth,
-                    newHeight
-                );
-                const newImageData = new ImageData(
-                    newPixelArray.data,
-                    newPixelArray.width,
-                    newPixelArray.height
-                );
-                setImage({
-                    ...image,
-                    imageBitmap: await createImageBitmap(newImageData),
-                    imageData: newImageData,
-                    width: newImageData.width,
-                    height: newImageData.height,
-                });
-            }
-        };
-
-        if (baseImage.imageData) {
-            resizeImage();
+        if (activeLayer) {
+            setValue(activeLayer.scale || 100);
         }
-    }, [value, baseImage]);
+    }, [activeLayer]);
+
+    React.useEffect(() => {
+        console.log(offsetX.current, offsetY.current);
+        if (!initialResizeDoneRef.current && activeLayer && canvasWidth > 0) {
+            const originalWidth = activeLayer.baseImageData?.width || 0;
+            const originalHeight = activeLayer.baseImageData?.height || 0;
+            if (originalWidth > 0 && originalHeight > 0) {
+                console.log(123)
+                offsetX.current = 0;
+                offsetY.current = 0;
+                const scaleWidth = (maxWidth / originalWidth) * 100;
+                const scaleHeight = (maxHeight / originalHeight) * 100;
+                const newScale = Math.min(scaleWidth, scaleHeight);
+                setValue(Math.floor(clamp(newScale, 12, 300)));
+                if (activeLayer.id) {
+                    scaleLayer(activeLayer.id, Math.floor(clamp(newScale, 12, 300)));
+                }
+                initialResizeDoneRef.current = true;
+            }
+        }
+    }, [activeLayer, canvasWidth]);
 
     const handleSliderChange = (
         _event: Event,
         newValue: number | number[],
         _activeThumb: number
     ) => {
-        setValue(typeof newValue === "number" ? newValue : newValue[0]);
+        const scale = typeof newValue === "number" ? newValue : newValue[0];
+        setValue(scale);
+        if (activeLayer?.id) {
+            scaleLayer(activeLayer.id, scale);
+        }
     };
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setValue(event.target.value === "" ? 0 : Number(event.target.value));
+        const scale = event.target.value === "" ? 0 : Number(event.target.value);
+        setValue(scale);
+        if (activeLayer?.id) {
+            scaleLayer(activeLayer.id, scale);
+        }
     };
 
     const handleBlur = () => {
-        setValue(clamp(value, 12, 300));
+        const scale = clamp(value, 12, 300);
+        setValue(scale);
+        if (activeLayer?.id) {
+            scaleLayer(activeLayer.id, scale);
+        }
     };
+
+    if (!activeLayer) {
+        return null;
+    }
 
     return (
         <Box

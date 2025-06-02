@@ -21,6 +21,7 @@ import {
 } from "../utils/interpolation";
 
 import { useImageData } from "../contexts/ImageDataContext";
+import { useLayers } from "../contexts/LayersContext";
 import type { SelectChangeEvent } from "@mui/material";
 import InfoOutlineIcon from "@mui/icons-material/InfoOutline";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -65,7 +66,9 @@ function ImageResizeModal(props: {
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
-    const { image, baseImage, setImage } = useImageData();
+    const { image, baseImage } = useImageData();
+    const { layers, activeLayerId, updateLayer } = useLayers();
+    const activeLayer = layers.find(layer => layer.id === activeLayerId);
 
     const [width, setWidth] = useState(image.width);
     const [height, setHeight] = useState(image.height);
@@ -121,31 +124,28 @@ function ImageResizeModal(props: {
     }
 
     useEffect(() => {
-        if (format === "percents") {
-            const percentWidth = Math.round(
-                (image.width / baseImage.width) * 100
-            );
-            const percentHeight = Math.round(
-                (image.height / baseImage.height) * 100
-            );
-            setWidth(percentWidth);
-            setHeight(percentHeight);
-        } else {
-            setWidth(image.width);
-            setHeight(image.height);
+        if (activeLayer) {
+            if (format === "percents") {
+                setWidth(activeLayer.scale || 100);
+                setHeight(activeLayer.scale || 100);
+            } else {
+                setWidth(activeLayer.width || image.width);
+                setHeight(activeLayer.height || image.height);
+            }
         }
-    }, [image]);
+    }, [activeLayer, format, image]);
 
     useEffect(() => {
-        console.log(123);
-        if (format === "percents") {
-            const percentWidth = Math.round((width / baseImage.width) * 100);
-            const percentHeight = Math.round((height / baseImage.height) * 100);
-            setWidth(percentWidth);
-            setHeight(percentHeight);
-        } else {
-            setWidth(Math.floor(width * (baseImage.width / 100)));
-            setHeight(Math.floor(height * (baseImage.height / 100)));
+        if (activeLayer) {
+            if (format === "percents") {
+                // Если переключаемся на проценты, используем scale активного слоя
+                setWidth(activeLayer.scale || 100);
+                setHeight(activeLayer.scale || 100);
+            } else {
+                // Если переключаемся на пиксели, используем текущие размеры активного слоя
+                setWidth(activeLayer.width || image.width);
+                setHeight(activeLayer.height || image.height);
+            }
         }
     }, [format]);
 
@@ -161,44 +161,61 @@ function ImageResizeModal(props: {
     }, [saveProportions, width, height]);
 
     async function applyResize() {
+        if (!activeLayer?.id) return;
+
         let targetWidth: number;
         let targetHeight: number;
+        
         if (format === "percents") {
-            targetWidth = Math.floor((baseImage.width * width) / 100);
-            targetHeight = Math.floor((baseImage.height * height) / 100);
+            // Если в процентах, вычисляем целевые размеры от базового размера слоя
+            const baseWidth = activeLayer.baseImageData?.width || baseImage.width;
+            const baseHeight = activeLayer.baseImageData?.height || baseImage.height;
+            targetWidth = Math.floor((baseWidth * width) / 100);
+            targetHeight = Math.floor((baseHeight * height) / 100);
         } else {
+            // Если в пикселях, используем введенные значения напрямую
             targetWidth = width;
             targetHeight = height;
         }
-        if (baseImage.imageData) {
+
+        // Используем baseImageData активного слоя для интерполяции
+        if (activeLayer.baseImageData) {
             let pixelArray: PixelArray;
             if (interpolation === "bilinear") {
                 pixelArray = await bilinearInterpolation(
-                    baseImage.imageData,
+                    activeLayer.baseImageData,
                     targetWidth,
                     targetHeight
                 );
             } else {
                 pixelArray = await nearestNeighborInterpolation(
-                    baseImage.imageData,
+                    activeLayer.baseImageData,
                     targetWidth,
                     targetHeight
                 );
             }
+
             const newImageData = new ImageData(
                 pixelArray.data,
                 pixelArray.width,
                 pixelArray.height
             );
-            // Update the image data in the context
-            setImage({
-                ...baseImage,
+
+            const newImageBitmap = await createImageBitmap(newImageData);
+
+            // Обновляем активный слой с новыми размерами и масштабом
+            const newScale = format === "percents" ? width : Math.round((targetWidth / (activeLayer.baseImageData.width)) * 100);
+            
+            // Обновляем слой через LayersContext
+            updateLayer(activeLayer.id, {
                 imageData: newImageData,
-                imageBitmap: await createImageBitmap(newImageData),
-                width: newImageData.width,
-                height: newImageData.height,
+                imageBitmap: newImageBitmap,
+                width: targetWidth,
+                height: targetHeight,
+                scale: newScale
             });
         }
+
         handleClose();
     }
 

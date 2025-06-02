@@ -61,6 +61,9 @@ function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
                 imageData,
                 baseImageData: imageData,
                 baseImageBitmap: imageBitmap,
+                width: gb7Data.width,
+                height: gb7Data.height,
+                scale: 100,
                 infoPanel: {
                     colorDepth: gb7Data.colorDepth,
                     format: "GB7",
@@ -86,6 +89,9 @@ function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
                 imageData,
                 baseImageData: imageData,
                 baseImageBitmap: imageBitmap,
+                width: CanvasImageData.width,
+                height: CanvasImageData.height,
+                scale: 100,
                 infoPanel: {
                     colorDepth: CanvasImageData.colorDepth,
                     format: CanvasImageData.format,

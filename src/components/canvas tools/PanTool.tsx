@@ -10,7 +10,7 @@ import { alpha } from "@mui/material";
 
 function PanTool() {
     const { canvasRef, offsetX, offsetY, render } = useCanvasElement();
-    const { image, baseImage } = useImageData();
+    const { image } = useImageData();
     const { activeTool, setActiveTool } = useTools();
     const [lastMouseX, setLastMouseX] = useState(0);
     const [lastMouseY, setLastMouseY] = useState(0);
@@ -88,22 +88,28 @@ function PanTool() {
     }, [isDragging, activeTool]);
 
     useEffect(() => {
-        setLastOffsetX(0);
-        setLastOffsetY(0);
-    }, [baseImage]);
-
-    useEffect(() => {
         updateMaxOffset();
+        const currentOffsetX = offsetX.current;
+        const currentOffsetY = offsetY.current;
+        
         offsetX.current = clamp(
-            lastOffsetX,
+            currentOffsetX,
             -maxOffsetX.current,
             maxOffsetX.current
         );
         offsetY.current = clamp(
-            lastOffsetY,
+            currentOffsetY,
             -maxOffsetY.current,
             maxOffsetY.current
         );
+        
+        if (offsetX.current !== currentOffsetX) {
+            setLastOffsetX(offsetX.current);
+        }
+        if (offsetY.current !== currentOffsetY) {
+            setLastOffsetY(offsetY.current);
+        }
+        
         render();
     }, [image, canvasRef]);
 

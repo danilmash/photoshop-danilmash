@@ -76,10 +76,6 @@ async function bilinearInterpolation(
         targetHeight,
         hash: hashPixelData(imageData), // см. ниже
     });
-    if (bilinearCache.has(cacheKey)) {
-        console.log("Использование кэша для", cacheKey);
-        return bilinearCache.get(cacheKey)!;
-    }
 
     const promise = (async () => {
         const newImageData = new Uint8ClampedArray(

@@ -34,6 +34,9 @@ interface Layer {
     imageBitmap: ImageBitmap | null;
     baseImageData: ImageData | null;
     baseImageBitmap: ImageBitmap | null;
+    width: number;
+    height: number;
+    scale: number;
     infoPanel: {
         colorDepth: number;
         format: string;

@@ -73,7 +73,6 @@ const CanvasElementProvider: React.FC<{ children: React.ReactNode }> = ({
 
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         ctx.setTransform(
             scale.current,
             0,
@@ -82,7 +81,6 @@ const CanvasElementProvider: React.FC<{ children: React.ReactNode }> = ({
             offsetX.current,
             offsetY.current
         );
-
         const bitmap = imageBitmapRef.current;
         if (bitmap) {
             const x = canvas.width / 2 - bitmap.width / 2;
