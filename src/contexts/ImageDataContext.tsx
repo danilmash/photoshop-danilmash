@@ -1,5 +1,6 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { CanvasImageData } from "../types/interfaces";
+import { useLayers } from "./LayersContext";
 
 interface ImageDataContextType {
     image: CanvasImageData;
@@ -15,6 +16,8 @@ const ImageDataContext = createContext<ImageDataContextType | undefined>(
 const ImageDataProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
+    const { layers, processLayers, getMaxWidthAndHeight } = useLayers();
+
     const [image, setImage] = useState<CanvasImageData>({
         imageData: null,
         imageBitmap: null,
@@ -34,6 +37,29 @@ const ImageDataProvider: React.FC<{ children: React.ReactNode }> = ({
         colorDepth: 0,
         format: "",
     });
+
+    useEffect(() => {
+        if (layers.length > 0) {
+            const { width, height } = getMaxWidthAndHeight();
+            const processedImage = processLayers(width, height);
+            const processedImageBitmap = processedImage.imageBitmap;
+            const processedImageData = processedImage.imageData;
+            setImage((prev) => ({
+                ...prev,
+                imageData: processedImageData,
+                imageBitmap: processedImageBitmap,
+                width,
+                height,
+            }));
+            setBaseImage((prev) => ({
+                ...prev,
+                imageData: processedImageData,
+                imageBitmap: processedImageBitmap,
+                width,
+                height,
+            }));
+        }
+    }, [layers]);
 
     return (
         <ImageDataContext.Provider

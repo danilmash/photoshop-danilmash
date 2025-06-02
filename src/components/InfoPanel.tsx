@@ -1,9 +1,9 @@
 import { styled } from "@mui/material/styles";
 import { Box, Divider, Typography } from "@mui/material";
-import { useImageData } from "../contexts/ImageDataContext";
 import ImageResizeSlider from "./ImageResizeSlider";
 import ImageResizeModal from "./ImageResizeModal";
-
+import { useLayers } from "../contexts/LayersContext";
+import { useEffect, useState } from "react";
 const InfoPanelStyle = styled(Box)(({ theme }) => ({
     padding: "8px 16px",
     display: "flex",
@@ -15,14 +15,22 @@ const InfoPanelStyle = styled(Box)(({ theme }) => ({
 }));
 
 function InfoPanel() {
-    const { image } = useImageData();
-    const { width, height, colorDepth, format } = image;
+    const { activeLayerId, layers } = useLayers();
+    const [infoPanelData, setInfoPanelData] = useState(
+        layers.find((layer) => layer.id === activeLayerId)?.infoPanel
+    );
 
-    if (!width || !height || !colorDepth || !format) {
+    useEffect(() => {
+        setInfoPanelData(
+            layers.find((layer) => layer.id === activeLayerId)?.infoPanel
+        );
+    }, [activeLayerId, layers]);
+
+    if (!infoPanelData) {
         return (
             <InfoPanelStyle>
                 <Typography variant="body1">
-                    Нет данных об изображении
+                    Выберите слой для отображения информации
                 </Typography>
             </InfoPanelStyle>
         );
@@ -31,14 +39,16 @@ function InfoPanel() {
     return (
         <InfoPanelStyle>
             <Typography variant="body1">
-                Размеры: {width} × {height} пикселей
+                Размеры: {infoPanelData.width} × {infoPanelData.height} пикселей
             </Typography>
             <Divider orientation="vertical" flexItem></Divider>
             <Typography variant="body1">
-                Глубина цвета: {colorDepth} бит{" "}
+                Глубина цвета: {infoPanelData.colorDepth} бит{" "}
             </Typography>
             <Divider orientation="vertical" flexItem></Divider>
-            <Typography variant="body1">Формат: {format}</Typography>
+            <Typography variant="body1">
+                Формат: {infoPanelData.format}
+            </Typography>
 
             <Box sx={{ marginLeft: "auto", display: "flex", gap: "16px" }}>
                 <ImageResizeModal

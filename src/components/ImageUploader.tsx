@@ -5,8 +5,8 @@ import { Tooltip } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { isGB7Format } from "../utils/GB7Parser";
 import { parseGB7 } from "../utils/GB7Parser";
-import { useImageData } from "../contexts/ImageDataContext";
 import loadImageFromFile from "../utils/loadImageFromFile";
+import { useLayers } from "../contexts/LayersContext";
 
 function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
     const StyledButton = styled(Button)(({ theme }) => ({
@@ -34,45 +34,66 @@ function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
         ", "
     )}`;
 
-    const { setImage, setBaseImage } = useImageData();
+    const { layers, addLayer } = useLayers();
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const handleButtonClick = () => {
         fileInputRef.current?.click();
     };
+
     async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-        const files = event.target.files;
-        if (!files || files.length === 0) {
-            // Пользователь отменил выбор файла
-            return;
-        }
-
-        const file = files[0];
-
+        const file = event.target.files?.[0];
+        if (!file) return;
         if (await isGB7Format(file)) {
             const gb7Data = await parseGB7(file);
-            setImage({
-                width: gb7Data.width,
-                height: gb7Data.height,
-                source: file,
-                colorDepth: gb7Data.colorDepth,
-                format: "GB7",
-                imageData: gb7Data.imageData,
-                imageBitmap: gb7Data.imageBitmap,
-            });
-
-            setBaseImage({
-                width: gb7Data.width,
-                height: gb7Data.height,
-                source: file,
-                colorDepth: gb7Data.colorDepth,
-                format: "GB7",
-                imageData: gb7Data.imageData,
-                imageBitmap: gb7Data.imageBitmap,
+            if (!gb7Data) {
+                alert("Ошибка при загрузке GB7 файла");
+                return;
+            }
+            const { imageBitmap, imageData } = gb7Data;
+            addLayer({
+                id: Date.now().toString(),
+                name: file.name,
+                visible: true,
+                opacity: 1,
+                blendMode: "source-over",
+                imageBitmap,
+                imageData,
+                baseImageData: imageData,
+                baseImageBitmap: imageBitmap,
+                infoPanel: {
+                    colorDepth: gb7Data.colorDepth,
+                    format: "GB7",
+                    source: file,
+                    width: gb7Data.width,
+                    height: gb7Data.height,
+                },
             });
         } else {
-            const imageData = await loadImageFromFile(file);
-            setImage(imageData);
-            setBaseImage(imageData);
+            const CanvasImageData = await loadImageFromFile(file);
+            if (!CanvasImageData) {
+                alert("Ошибка при загрузке изображения");
+                return;
+            }
+            const { imageBitmap, imageData } = CanvasImageData;
+            addLayer({
+                id: Date.now().toString(),
+                name: file.name,
+                visible: true,
+                opacity: 1,
+                blendMode: "multiply",
+                imageBitmap,
+                imageData,
+                baseImageData: imageData,
+                baseImageBitmap: imageBitmap,
+                infoPanel: {
+                    colorDepth: CanvasImageData.colorDepth,
+                    format: CanvasImageData.format,
+                    source: file,
+                    width: CanvasImageData.width,
+                    height: CanvasImageData.height,
+                },
+            });
         }
     }
 
@@ -88,6 +109,7 @@ function ImageUploader(props: { buttonType: "contained" | "outlined" }) {
             <StyledButton
                 variant={props.buttonType}
                 onClick={handleButtonClick}
+                disabled={layers.length >= 2}
             >
                 Загрузить изображение
                 <Tooltip title={tooltipText}>
