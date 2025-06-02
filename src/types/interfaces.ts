@@ -34,9 +34,14 @@ interface Layer {
     imageBitmap: ImageBitmap | null;
     baseImageData: ImageData | null;
     baseImageBitmap: ImageBitmap | null;
+    originalImageData: ImageData | null;
     width: number;
     height: number;
     scale: number;
+    curvePoints: {
+        point1: { x: number; y: number };
+        point2: { x: number; y: number };
+    } | null;
     infoPanel: {
         colorDepth: number;
         format: string;

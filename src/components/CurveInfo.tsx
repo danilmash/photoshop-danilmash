@@ -12,16 +12,12 @@ import {
 import { useLayers } from "../contexts/LayersContext";
 import { calculateHistograms, histogramToPoints, HistogramData } from "../utils/histogram";
 import { useTools } from "../contexts/ToolsContext";
+import { Point, generateLUT, applyLUT } from "../utils/curves";
 
 const GRAPH_WIDTH = 255;
 const GRAPH_HEIGHT = 255;
 const PREVIEW_SIZE = 150;
 const GRID_STEP = 51; // Чтобы получить деления 0, 51, 102, 153, 204, 255
-
-interface Point {
-    x: number;
-    y: number;
-}
 
 const StyledSvg = styled('svg')(({ theme }) => ({
     backgroundColor: theme.palette.background.paper,
@@ -39,42 +35,6 @@ const PreviewCanvas = styled('canvas')({
     borderRadius: '4px',
 });
 
-function generateLUT(point1: Point, point2: Point): Uint8ClampedArray {
-    const lut = new Uint8ClampedArray(256);
-    
-    // Сортируем точки по x
-    const [p1, p2] = point1.x <= point2.x ? [point1, point2] : [point2, point1];
-    
-    // Заполняем значения до первой точки
-    for (let x = 0; x < p1.x; x++) {
-        lut[x] = Math.max(0, Math.min(255, p1.y * (x / p1.x)));
-    }
-    
-    // Заполняем значения между точками
-    const slope = (p2.y - p1.y) / (p2.x - p1.x);
-    for (let x = p1.x; x <= p2.x; x++) {
-        lut[x] = Math.max(0, Math.min(255, p1.y + slope * (x - p1.x)));
-    }
-    
-    // Заполняем значения после второй точки
-    for (let x = p2.x + 1; x < 256; x++) {
-        lut[x] = Math.max(0, Math.min(255, p2.y + (255 - p2.y) * ((x - p2.x) / (255 - p2.x))));
-    }
-    
-    return lut;
-}
-
-function applyLUT(imageData: ImageData, lut: Uint8ClampedArray): ImageData {
-    const newData = new Uint8ClampedArray(imageData.data.length);
-    for (let i = 0; i < imageData.data.length; i += 4) {
-        newData[i] = lut[imageData.data[i]];         // R
-        newData[i + 1] = lut[imageData.data[i + 1]]; // G
-        newData[i + 2] = lut[imageData.data[i + 2]]; // B
-        newData[i + 3] = imageData.data[i + 3];      // A
-    }
-    return new ImageData(newData, imageData.width, imageData.height);
-}
-
 export default function CurveInfo() {
     const { layers, activeLayerId, updateLayer } = useLayers();
     const activeLayer = layers.find(layer => layer.id === activeLayerId);
@@ -85,20 +45,42 @@ export default function CurveInfo() {
     const [point2, setPoint2] = useState<Point>({ x: 255, y: 255 });
     const previewCanvasRef = useRef<HTMLCanvasElement>(null);
     const originalImageData = useRef<ImageData | null>(null);
+    const currentLUT = useRef<Uint8ClampedArray | null>(null);
     const [showPreview, setShowPreview] = useState(false);
 
     // Обновляем гистограммы и сохраняем оригинальное изображение при изменении активного слоя
     useEffect(() => {
         if (activeLayer?.imageData) {
-            const histData = calculateHistograms(activeLayer.imageData);
+            // Если у слоя нет сохраненного оригинала, считаем текущие данные оригиналом
+            if (!activeLayer.originalImageData) {
+                updateLayer(activeLayer.id, {
+                    originalImageData: new ImageData(
+                        new Uint8ClampedArray(activeLayer.imageData.data),
+                        activeLayer.imageData.width,
+                        activeLayer.imageData.height
+                    )
+                });
+            }
+
+            // Используем оригинальные данные для гистограммы
+            const histData = calculateHistograms(activeLayer.originalImageData || activeLayer.imageData);
             setHistograms(histData);
+
+            // Сохраняем копию оригинала для превью
             originalImageData.current = new ImageData(
-                new Uint8ClampedArray(activeLayer.imageData.data),
-                activeLayer.imageData.width,
-                activeLayer.imageData.height
+                new Uint8ClampedArray(activeLayer.originalImageData?.data || activeLayer.imageData.data),
+                activeLayer.originalImageData?.width || activeLayer.imageData.width,
+                activeLayer.originalImageData?.height || activeLayer.imageData.height
             );
+
+            // Если есть сохраненные точки в слое, восстанавливаем их
+            if (activeLayer.curvePoints) {
+                setPoint1(activeLayer.curvePoints.point1);
+                setPoint2(activeLayer.curvePoints.point2);
+                currentLUT.current = generateLUT(activeLayer.curvePoints.point1, activeLayer.curvePoints.point2);
+            }
         }
-    }, [activeLayer]);
+    }, [activeLayer?.imageData]);
 
     // Обновляем превью при изменении точек
     useEffect(() => {
@@ -117,6 +99,7 @@ export default function CurveInfo() {
             if (!ctx) return;
 
             const lut = generateLUT(point1, point2);
+            currentLUT.current = lut; // Сохраняем текущий LUT
             const newImageData = applyLUT(originalImageData.current, lut);
             
             // Создаем временный канвас для масштабирования
@@ -206,20 +189,42 @@ export default function CurveInfo() {
     };
 
     const handleApply = async () => {
-        if (activeLayer?.imageData && activeLayer.id && originalImageData.current) {
+        if (activeLayer?.id && originalImageData.current) {
             const lut = generateLUT(point1, point2);
+            currentLUT.current = lut;
+
+            // Применяем LUT к оригинальному изображению
             const newImageData = applyLUT(originalImageData.current, lut);
             const newImageBitmap = await createImageBitmap(newImageData);
+
+            // Сохраняем точки и обновляем слой
             updateLayer(activeLayer.id, {
                 imageData: newImageData,
                 imageBitmap: newImageBitmap,
+                curvePoints: { point1, point2 }
             });
         }
     };
 
     const handleReset = () => {
-        setPoint1({ x: 0, y: 0 });
-        setPoint2({ x: 255, y: 255 });
+        if (activeLayer?.id && activeLayer.originalImageData) {
+            setPoint1({ x: 0, y: 0 });
+            setPoint2({ x: 255, y: 255 });
+            currentLUT.current = null;
+
+            // Возвращаем оригинальное изображение
+            createImageBitmap(activeLayer.originalImageData).then(imageBitmap => {
+                updateLayer(activeLayer.id, {
+                    imageData: new ImageData(
+                        new Uint8ClampedArray(activeLayer.originalImageData!.data),
+                        activeLayer.originalImageData!.width,
+                        activeLayer.originalImageData!.height
+                    ),
+                    imageBitmap,
+                    curvePoints: null
+                });
+            });
+        }
     };
 
     if (activeTool !== "curve") {

@@ -61,6 +61,7 @@ function ImageUploader(props: { buttonType: "contained" | "outlined", onLoad: ()
                 imageData,
                 baseImageData: imageData,
                 baseImageBitmap: imageBitmap,
+                originalImageData: imageData,
                 width: gb7Data.width,
                 height: gb7Data.height,
                 scale: 100,
@@ -71,6 +72,10 @@ function ImageUploader(props: { buttonType: "contained" | "outlined", onLoad: ()
                     width: gb7Data.width,
                     height: gb7Data.height,
                 },
+                curvePoints: {
+                    point1: { x: 0, y: 0 },
+                    point2: { x: 255, y: 255 },
+                }
             });
         } else {
             const CanvasImageData = await loadImageFromFile(file);
@@ -89,6 +94,7 @@ function ImageUploader(props: { buttonType: "contained" | "outlined", onLoad: ()
                 imageData,
                 baseImageData: imageData,
                 baseImageBitmap: imageBitmap,
+                originalImageData: imageData,
                 width: CanvasImageData.width,
                 height: CanvasImageData.height,
                 scale: 100,
@@ -99,6 +105,10 @@ function ImageUploader(props: { buttonType: "contained" | "outlined", onLoad: ()
                     width: CanvasImageData.width,
                     height: CanvasImageData.height,
                 },
+                curvePoints: {
+                    point1: { x: 0, y: 0 },
+                    point2: { x: 255, y: 255 },
+                }
             });
         }
         props.onLoad();

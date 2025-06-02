@@ -1,6 +1,7 @@
 import { useContext, createContext, useState } from "react";
 import { Layer } from "../types/interfaces";
 import { bilinearInterpolation } from "../utils/interpolation";
+import { generateLUT, applyLUT } from "../utils/curves";
 
 interface LayersContextType {
     layers: Layer[];
@@ -56,11 +57,20 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
         const scaledWidth = Math.floor((originalWidth * scale) / 100);
         const scaledHeight = Math.floor((originalHeight * scale) / 100);
 
+        // Определяем исходные данные для масштабирования
+        let sourceImageData = layer.baseImageData;
+        
+        // Если есть кривые, применяем их к базовому изображению
+        if (layer.curvePoints) {
+            const lut = generateLUT(layer.curvePoints.point1, layer.curvePoints.point2);
+            sourceImageData = applyLUT(layer.baseImageData, lut);
+        }
+
         if (scale === 100) {
-            // Для 100% используем оригинальное изображение
+            // Для 100% используем исходное изображение
             updateLayer(id, {
-                imageData: layer.baseImageData,
-                imageBitmap: layer.baseImageBitmap,
+                imageData: sourceImageData,
+                imageBitmap: await createImageBitmap(sourceImageData),
                 width: originalWidth,
                 height: originalHeight,
                 scale: scale,
@@ -74,7 +84,7 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
             // Для других масштабов применяем интерполяцию
             const scaledPixelArray = await bilinearInterpolation(
                 {
-                    data: layer.baseImageData.data,
+                    data: sourceImageData.data,
                     width: originalWidth,
                     height: originalHeight,
                 },
