@@ -5,6 +5,7 @@ import { useTools } from "../contexts/ToolsContext";
 import { useCanvasElement } from "../contexts/CanvasElementContext";
 import { useEffect } from "react";
 import { useImageData } from "../contexts/ImageDataContext";
+import CurveDialog from "./canvas tools/CurveDialog";
 function Toolbar() {
     const { activeTool, setActiveTool } = useTools();
     const { canvasRef } = useCanvasElement();
@@ -65,20 +66,26 @@ function Toolbar() {
     }
 
     return (
-        <Paper
-            elevation={3}
-            sx={{
-                padding: 1,
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                width: "100%",
-                borderRadius: "12px",
-            }}
-        >
-            <PanTool />
-            <EyedropperTool />
-        </Paper>
+        <>
+            <Paper
+                elevation={3}
+                sx={{
+                    padding: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    width: "100%",
+                    borderRadius: "12px",
+                }}
+            >
+                <PanTool />
+                <EyedropperTool />
+                <CurveDialog
+            />
+                
+            </Paper>
+            
+        </>
     );
 }
 
