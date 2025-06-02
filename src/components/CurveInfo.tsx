@@ -45,7 +45,6 @@ export default function CurveInfo() {
     const [point2, setPoint2] = useState<Point>({ x: 255, y: 255 });
     const previewCanvasRef = useRef<HTMLCanvasElement>(null);
     const originalImageData = useRef<ImageData | null>(null);
-    const currentLUT = useRef<Uint8ClampedArray | null>(null);
     const [showPreview, setShowPreview] = useState(false);
 
     // Обновляем гистограммы и сохраняем оригинальное изображение при изменении активного слоя
@@ -77,16 +76,15 @@ export default function CurveInfo() {
             if (activeLayer.curvePoints) {
                 setPoint1(activeLayer.curvePoints.point1);
                 setPoint2(activeLayer.curvePoints.point2);
-                currentLUT.current = generateLUT(activeLayer.curvePoints.point1, activeLayer.curvePoints.point2);
             }
         }
     }, [activeLayer?.imageData]);
 
-    // Обновляем превью при изменении точек
+    // Обновляем превью и гистограммы при изменении точек
     useEffect(() => {
-        const updatePreview = async () => {
+        const updatePreviewAndHistograms = async () => {
             const canvas = previewCanvasRef.current;
-            if (!canvas || !originalImageData.current || !showPreview) {
+            if (!canvas || !originalImageData.current) {
                 // Очищаем превью если предпросмотр выключен
                 const ctx = canvas?.getContext('2d');
                 if (ctx) {
@@ -99,9 +97,17 @@ export default function CurveInfo() {
             if (!ctx) return;
 
             const lut = generateLUT(point1, point2);
-            currentLUT.current = lut; // Сохраняем текущий LUT
             const newImageData = applyLUT(originalImageData.current, lut);
             
+            // Пересчитываем гистограммы для измененного изображения
+            const newHistograms = calculateHistograms(newImageData);
+            setHistograms(newHistograms);
+
+            if (!showPreview) {
+                ctx.clearRect(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
+                return;
+            }
+
             // Создаем временный канвас для масштабирования
             const tempCanvas = new OffscreenCanvas(
                 originalImageData.current.width,
@@ -122,7 +128,7 @@ export default function CurveInfo() {
             );
         };
 
-        updatePreview();
+        updatePreviewAndHistograms();
     }, [point1, point2, showPreview]);
 
     // Рисуем сетку
@@ -191,7 +197,6 @@ export default function CurveInfo() {
     const handleApply = async () => {
         if (activeLayer?.id && originalImageData.current) {
             const lut = generateLUT(point1, point2);
-            currentLUT.current = lut;
 
             // Применяем LUT к оригинальному изображению
             const newImageData = applyLUT(originalImageData.current, lut);
@@ -210,7 +215,6 @@ export default function CurveInfo() {
         if (activeLayer?.id && activeLayer.originalImageData) {
             setPoint1({ x: 0, y: 0 });
             setPoint2({ x: 255, y: 255 });
-            currentLUT.current = null;
 
             // Возвращаем оригинальное изображение
             createImageBitmap(activeLayer.originalImageData).then(imageBitmap => {
