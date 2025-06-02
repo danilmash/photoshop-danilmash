@@ -13,6 +13,7 @@ import { useLayers } from "../contexts/LayersContext";
 import { calculateHistograms, histogramToPoints, HistogramData } from "../utils/histogram";
 import { useTools } from "../contexts/ToolsContext";
 import { Point, generateLUT, applyLUT } from "../utils/curves";
+import { bilinearInterpolation } from "../utils/interpolation";
 
 const GRAPH_WIDTH = 255;
 const GRAPH_HEIGHT = 255;
@@ -199,13 +200,44 @@ export default function CurveInfo() {
             const lut = generateLUT(point1, point2);
 
             // Применяем LUT к оригинальному изображению
-            const newImageData = applyLUT(originalImageData.current, lut);
-            const newImageBitmap = await createImageBitmap(newImageData);
+            const newBaseImageData = applyLUT(originalImageData.current, lut);
+            
+            // Если текущий масштаб не 100%, применяем масштабирование
+            let finalImageData = newBaseImageData;
+            let finalWidth = newBaseImageData.width;
+            let finalHeight = newBaseImageData.height;
+            
+            if (activeLayer.scale !== 100) {
+                const scaledWidth = Math.floor((newBaseImageData.width * activeLayer.scale) / 100);
+                const scaledHeight = Math.floor((newBaseImageData.height * activeLayer.scale) / 100);
+                
+                const scaledPixelArray = await bilinearInterpolation(
+                    {
+                        data: newBaseImageData.data,
+                        width: newBaseImageData.width,
+                        height: newBaseImageData.height,
+                    },
+                    scaledWidth,
+                    scaledHeight
+                );
+                
+                finalImageData = new ImageData(
+                    scaledPixelArray.data,
+                    scaledPixelArray.width,
+                    scaledPixelArray.height
+                );
+                finalWidth = scaledWidth;
+                finalHeight = scaledHeight;
+            }
+
+            const newImageBitmap = await createImageBitmap(finalImageData);
 
             // Сохраняем точки и обновляем слой
             updateLayer(activeLayer.id, {
-                imageData: newImageData,
+                imageData: finalImageData,
                 imageBitmap: newImageBitmap,
+                width: finalWidth,
+                height: finalHeight,
                 curvePoints: { point1, point2 }
             });
         }
