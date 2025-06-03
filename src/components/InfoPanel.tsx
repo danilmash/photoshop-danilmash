@@ -4,6 +4,8 @@ import ImageResizeSlider from "./ImageResizeSlider";
 import ImageResizeModal from "./ImageResizeModal";
 import { useLayers } from "../contexts/LayersContext";
 import { useEffect, useState } from "react";
+import SaveImageButton from "./SaveImageButton";
+
 const InfoPanelStyle = styled(Box)(({ theme }) => ({
     padding: "8px 16px",
     display: "flex",
@@ -50,7 +52,12 @@ function InfoPanel() {
                 Формат: {infoPanelData.format}
             </Typography>
 
-            <Box sx={{ marginLeft: "auto", display: "flex", gap: "16px" }}>
+            <Box sx={{ marginLeft: "auto", display: "flex", gap: "16px", alignItems: "center" }}>
+                <SaveImageButton
+                    buttonColor="contrast"
+                    buttonType="outlined"
+                />
+                <Divider orientation="vertical" flexItem></Divider>
                 <ImageResizeModal
                     buttonColor="contrast"
                     buttonType="outlined"
