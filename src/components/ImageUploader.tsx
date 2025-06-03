@@ -75,7 +75,8 @@ function ImageUploader(props: { buttonType: "contained" | "outlined", onLoad: ()
                 curvePoints: {
                     point1: { x: 0, y: 0 },
                     point2: { x: 255, y: 255 },
-                }
+                },
+                kernelValues: null
             });
         } else {
             const CanvasImageData = await loadImageFromFile(file);
@@ -108,7 +109,8 @@ function ImageUploader(props: { buttonType: "contained" | "outlined", onLoad: ()
                 curvePoints: {
                     point1: { x: 0, y: 0 },
                     point2: { x: 255, y: 255 },
-                }
+                },
+                kernelValues: null
             });
         }
         props.onLoad();

@@ -5,6 +5,7 @@ import React from "react";
 import Toolbar from "./Toolbar";
 import ColorInfoPanel from "./ColorInfoPanel";
 import LayerPanel from "./LayerPanel";
+import KernelInfo from "./KernelInfo";
 
 function Workspace() {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -75,6 +76,7 @@ function Workspace() {
                     width: `${leftWidth}px`,
                     backgroundColor: "#f0f0f0",
                     height: "100%",
+                    minHeight: 0,
                     overflow: "auto",
                     padding: 2,
                     display: "flex",
@@ -83,6 +85,7 @@ function Workspace() {
                 }}
             >
                 <Toolbar />
+                <KernelInfo />
                 <ColorInfoPanel />
             </Box>
 

@@ -42,6 +42,7 @@ interface Layer {
         point1: { x: number; y: number };
         point2: { x: number; y: number };
     } | null;
+    kernelValues: number[][] | null;
     infoPanel: {
         colorDepth: number;
         format: string;

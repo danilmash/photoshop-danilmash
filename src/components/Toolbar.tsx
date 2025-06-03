@@ -7,6 +7,7 @@ import PanTool from "./canvas tools/PanTool";
 import EyedropperTool from "./canvas tools/EyedropperTool";
 import CurveTool from "./canvas tools/CurveTool";
 import CurveInfo from "./CurveInfo";
+import KernelTool from "./canvas tools/KernelTool";
 
 function Toolbar() {
     const { activeTool, setActiveTool } = useTools();
@@ -82,10 +83,11 @@ function Toolbar() {
             >
                 <PanTool />
                 <EyedropperTool />
+                <KernelTool />
                 <CurveTool />
             </Paper>
-            
-            <CurveInfo />
+                
+                <CurveInfo />
         </Box>
     );
 }

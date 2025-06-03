@@ -2,6 +2,7 @@ import { useContext, createContext, useState } from "react";
 import { Layer } from "../types/interfaces";
 import { bilinearInterpolation } from "../utils/interpolation";
 import { generateLUT, applyLUT } from "../utils/curves";
+import { applyKernel } from "../utils/kernels";
 
 interface LayersContextType {
     layers: Layer[];
@@ -64,6 +65,11 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
         if (layer.curvePoints) {
             const lut = generateLUT(layer.curvePoints.point1, layer.curvePoints.point2);
             sourceImageData = applyLUT(layer.baseImageData, lut);
+        }
+
+        // Если есть kernel, применяем его к изображению после кривых
+        if (layer.kernelValues) {
+            sourceImageData = applyKernel(sourceImageData, layer.kernelValues);
         }
 
         if (scale === 100) {

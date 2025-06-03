@@ -110,6 +110,7 @@ function AddLayerModal() {
                 point1: { x: 0, y: 0 },
                 point2: { x: 255, y: 255 },
             },
+            kernelValues: null
         });
 
         handleClose();
