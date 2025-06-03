@@ -6,43 +6,57 @@ import { useTools } from "../../contexts/ToolsContext";
 import { useCanvasElement } from "../../contexts/CanvasElementContext";
 import { useImageData } from "../../contexts/ImageDataContext";
 import { useEffect } from "react";
+import { useLayers } from "../../contexts/LayersContext";
+
 function EyedropperTool() {
     const tools = useTools();
-    const { canvasRef } = useCanvasElement();
-    const { image, baseImage } = useImageData();
+    const { canvasRef, offsetX, offsetY } = useCanvasElement();
+    const { image, baseImage, scale } = useImageData();
+    const { processLayers } = useLayers();
 
-    function getColor(coordinates: { x: number; y: number }) {
-        if (!image.imageData) return;
-        const pixel = image.imageData.data;
-        const index =
-            (coordinates.y * image.imageData.width + coordinates.x) * 4;
-        const r = pixel[index];
-        const g = pixel[index + 1];
-        const b = pixel[index + 2];
-        const a = pixel[index + 3];
+    async function getColor(coordinates: { x: number; y: number }) {
+        const { imageData } = await processLayers(baseImage.width, baseImage.height, 100);
+        if (!imageData) return;
+
+        const x = Math.max(0, Math.min(coordinates.x, baseImage.width - 1));
+        const y = Math.max(0, Math.min(coordinates.y, baseImage.height - 1));
+
+        const index = (y * imageData.width + x) * 4;
+        const r = imageData.data[index];
+        const g = imageData.data[index + 1];
+        const b = imageData.data[index + 2];
+        const a = imageData.data[index + 3];
+
         if (a === 0) return { r: 255, g: 255, b: 255, a: 255 };
         return { r, g, b, a };
     }
 
-    function handleMouseDown(event: MouseEvent) {
+    async function handleMouseDown(event: MouseEvent) {
         if (tools.activeTool !== "eyedropper") return;
         const canvas = canvasRef.current;
         if (!canvas) return;
+
         const rect = canvas.getBoundingClientRect();
-        if (!rect) return;
-        const x = Math.round(
-            event.clientX - rect.left - canvas.width / 2 + image.width / 2
-        );
-        const y = Math.round(
-            event.clientY - rect.top - canvas.height / 2 + image.height / 2
-        );
-        if (x < 0 || x > image.width || y < 0 || y > image.height) return;
-        const color = getColor({ x, y });
+        
+        const canvasX = (event.clientX - rect.left) * (canvas.width / rect.width);
+        const canvasY = (event.clientY - rect.top) * (canvas.height / rect.height);
+
+        const canvasCenterX = canvas.width / 2;
+        const canvasCenterY = canvas.height / 2;
+
+        const offsetFromCenterX = canvasX - canvasCenterX - offsetX.current;
+        const offsetFromCenterY = canvasY - canvasCenterY - offsetY.current;
+
+        const x = Math.round(baseImage.width / 2 + (offsetFromCenterX * 100) / scale);
+        const y = Math.round(baseImage.height / 2 + (offsetFromCenterY * 100) / scale);
+
+        if (x < 0 || x >= baseImage.width || y < 0 || y >= baseImage.height) return;
+
+        const color = await getColor({ x, y });
         if (!color) return;
-        const colorType =
-            event.ctrlKey || event.shiftKey || event.altKey
-                ? "secondary"
-                : "primary";
+
+        const colorType = event.ctrlKey || event.shiftKey || event.altKey ? "secondary" : "primary";
+        
         if (colorType === "primary") {
             tools.setPrimaryColor(color);
             tools.setPrimaryColorCoordinates({ x, y });
@@ -59,11 +73,11 @@ function EyedropperTool() {
         return () => {
             canvas.removeEventListener("mousedown", handleMouseDown);
         };
-    }, [tools.activeTool, image, baseImage]);
+    }, [tools.activeTool, image]);
 
     return (
         <Tooltip
-            title="Инструмент рука: позволяет перемещать изображение"
+            title="Пипетка: клик для выбора основного цвета, Ctrl+клик для дополнительного цвета"
             placement="bottom"
         >
             <IconButton
