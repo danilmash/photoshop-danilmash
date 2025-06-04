@@ -82,8 +82,6 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
                 scale: scale,
                 infoPanel: {
                     ...layer.infoPanel,
-                    width: originalWidth,
-                    height: originalHeight,
                 },
             });
         } else {
@@ -114,8 +112,6 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
                 scale: scale,
                 infoPanel: {
                     ...layer.infoPanel,
-                    width: scaledWidth,
-                    height: scaledHeight,
                 },
             });
         }
