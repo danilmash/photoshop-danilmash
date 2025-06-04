@@ -12,6 +12,7 @@ import {
 import { useLayers } from "../contexts/LayersContext";
 import ImageUploader from "./ImageUploader";
 import { ChromePicker } from "react-color";
+import { KERNELS } from '../utils/kernels';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -84,6 +85,9 @@ function AddLayerModal() {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const imageBitmap = canvas.transferToImageBitmap();
 
+        // Проверяем, есть ли альфа-канал (если альфа не 1)
+        const hasAlpha = color.a < 1;
+
         // Добавляем новый слой
         addLayer({
             id: Date.now().toString(),
@@ -94,23 +98,23 @@ function AddLayerModal() {
             imageData: imageData,
             imageBitmap: imageBitmap,
             baseImageData: imageData,
-            baseImageBitmap: imageBitmap,
-            originalImageData: imageData,
             width: canvas.width,
             height: canvas.height,
             scale: 100,
-            infoPanel: {
-                colorDepth: 32,
-                format: "RGB",
-                source: null,
-                width: canvas.width,
-                height: canvas.height,
-            },
             curvePoints: {
                 point1: { x: 0, y: 0 },
                 point2: { x: 255, y: 255 },
             },
-            kernelValues: null
+            kernelValues: KERNELS.identity,
+            infoPanel: {
+                colorDepth: 32,
+                format: "RGBA",
+                source: null,
+                width: canvas.width,
+                height: canvas.height,
+            },
+            alphaVisible: true,
+            hasAlpha: hasAlpha
         });
 
         handleClose();

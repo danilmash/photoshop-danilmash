@@ -28,7 +28,14 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
     const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
 
     const addLayer = (layer: Layer) => {
-        setLayers((prevLayers) => [...prevLayers, layer]);
+        // Проверяем наличие альфа-канала при добавлении слоя
+        const hasAlpha = layer.imageData ? checkForAlpha(layer.imageData) : false;
+        const layerWithAlpha = {
+            ...layer,
+            hasAlpha,
+            alphaVisible: true
+        };
+        setLayers((prevLayers) => [...prevLayers, layerWithAlpha]);
         setActiveLayerId(layer.id);
     };
 
@@ -43,10 +50,29 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
 
     const updateLayer = (id: string, updates: Partial<Layer>) => {
         setLayers((prevLayers) =>
-            prevLayers.map((layer) =>
-                layer.id === id ? { ...layer, ...updates } : layer
-            )
+            prevLayers.map((layer) => {
+                if (layer.id === id) {
+                    const updatedLayer = { ...layer, ...updates };
+                    // Если обновляется imageData, проверяем наличие альфа-канала
+                    if (updates.imageData) {
+                        updatedLayer.hasAlpha = checkForAlpha(updates.imageData);
+                    }
+                    return updatedLayer;
+                }
+                return layer;
+            })
         );
+    };
+
+    // Функция для проверки наличия альфа-канала
+    const checkForAlpha = (imageData: ImageData): boolean => {
+        const data = imageData.data;
+        for (let i = 3; i < data.length; i += 4) {
+            if (data[i] !== 255) {
+                return true;
+            }
+        }
+        return false;
     };
 
     const scaleLayer = async (id: string, scale: number) => {
@@ -83,6 +109,8 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
                 infoPanel: {
                     ...layer.infoPanel,
                 },
+                hasAlpha: checkForAlpha(sourceImageData),
+                alphaVisible: layer.alphaVisible
             });
         } else {
             // Для других масштабов применяем интерполяцию
@@ -113,6 +141,8 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
                 infoPanel: {
                     ...layer.infoPanel,
                 },
+                hasAlpha: checkForAlpha(scaledImageData),
+                alphaVisible: layer.alphaVisible
             });
         }
     };
@@ -140,7 +170,28 @@ function LayersProvider({ children }: { children: React.ReactNode }) {
             if (layer.visible && layer.imageBitmap) {
                 ctx.globalAlpha = layer.opacity;
                 ctx.globalCompositeOperation = layer.blendMode;
-                ctx.drawImage(layer.imageBitmap, 0, 0);
+                
+                // Учитываем видимость альфа-канала
+                if (!layer.alphaVisible && layer.hasAlpha) {
+                    // Создаем временный канвас для обработки альфа-канала
+                    const tempCanvas = new OffscreenCanvas(layer.width, layer.height);
+                    const tempCtx = tempCanvas.getContext("2d");
+                    if (tempCtx && layer.imageData) {
+                        const tempImageData = new ImageData(
+                            new Uint8ClampedArray(layer.imageData.data),
+                            layer.imageData.width,
+                            layer.imageData.height
+                        );
+                        // Устанавливаем альфа-канал в 255
+                        for (let j = 3; j < tempImageData.data.length; j += 4) {
+                            tempImageData.data[j] = 255;
+                        }
+                        tempCtx.putImageData(tempImageData, 0, 0);
+                        ctx.drawImage(tempCanvas, 0, 0);
+                    }
+                } else {
+                    ctx.drawImage(layer.imageBitmap, 0, 0);
+                }
             }
         }
 

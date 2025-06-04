@@ -7,6 +7,7 @@ import { isGB7Format } from "../utils/GB7Parser";
 import { parseGB7 } from "../utils/GB7Parser";
 import loadImageFromFile from "../utils/loadImageFromFile";
 import { useLayers } from "../contexts/LayersContext";
+import { KERNELS } from '../utils/kernels';
 
 function ImageUploader(props: { buttonType: "contained" | "outlined", onLoad: () => void }) {
     const StyledButton = styled(Button)(({ theme }) => ({
@@ -34,11 +35,22 @@ function ImageUploader(props: { buttonType: "contained" | "outlined", onLoad: ()
         ", "
     )}`;
 
-    const {  addLayer } = useLayers();
+    const { addLayer } = useLayers();
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const handleButtonClick = () => {
         fileInputRef.current?.click();
+    };
+
+    // Функция для проверки наличия альфа-канала в ImageData
+    const checkForAlpha = (imageData: ImageData): boolean => {
+        const data = imageData.data;
+        for (let i = 3; i < data.length; i += 4) {
+            if (data[i] !== 255) {
+                return true;
+            }
+        }
+        return false;
     };
 
     async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -51,6 +63,8 @@ function ImageUploader(props: { buttonType: "contained" | "outlined", onLoad: ()
                 return;
             }
             const { imageBitmap, imageData } = gb7Data;
+            const hasAlpha = checkForAlpha(imageData);
+
             addLayer({
                 id: Date.now().toString(),
                 name: file.name,
@@ -60,8 +74,6 @@ function ImageUploader(props: { buttonType: "contained" | "outlined", onLoad: ()
                 imageBitmap,
                 imageData,
                 baseImageData: imageData,
-                baseImageBitmap: imageBitmap,
-                originalImageData: imageData,
                 width: gb7Data.width,
                 height: gb7Data.height,
                 scale: 100,
@@ -76,41 +88,45 @@ function ImageUploader(props: { buttonType: "contained" | "outlined", onLoad: ()
                     point1: { x: 0, y: 0 },
                     point2: { x: 255, y: 255 },
                 },
-                kernelValues: null
+                kernelValues: KERNELS.identity,
+                alphaVisible: true,
+                hasAlpha: hasAlpha
             });
         } else {
-            const CanvasImageData = await loadImageFromFile(file);
-            if (!CanvasImageData) {
+            const loadedImage = await loadImageFromFile(file);
+            if (!loadedImage || !loadedImage.imageData) {
                 alert("Ошибка при загрузке изображения");
                 return;
             }
-            const { imageBitmap, imageData } = CanvasImageData;
+
+            const hasAlpha = checkForAlpha(loadedImage.imageData);
+
             addLayer({
                 id: Date.now().toString(),
                 name: file.name,
                 visible: true,
                 opacity: 1,
-                blendMode: "multiply",
-                imageBitmap,
-                imageData,
-                baseImageData: imageData,
-                baseImageBitmap: imageBitmap,
-                originalImageData: imageData,
-                width: CanvasImageData.width,
-                height: CanvasImageData.height,
+                blendMode: "source-over",
+                imageBitmap: loadedImage.imageBitmap,
+                imageData: loadedImage.imageData,
+                baseImageData: loadedImage.imageData,
+                width: loadedImage.width,
+                height: loadedImage.height,
                 scale: 100,
                 infoPanel: {
-                    colorDepth: CanvasImageData.colorDepth,
-                    format: CanvasImageData.format,
+                    colorDepth: loadedImage.colorDepth,
+                    format: loadedImage.format,
                     source: file,
-                    width: CanvasImageData.width,
-                    height: CanvasImageData.height,
+                    width: loadedImage.width,
+                    height: loadedImage.height,
                 },
                 curvePoints: {
                     point1: { x: 0, y: 0 },
                     point2: { x: 255, y: 255 },
                 },
-                kernelValues: null
+                kernelValues: KERNELS.identity,
+                alphaVisible: true,
+                hasAlpha: hasAlpha
             });
         }
         props.onLoad();

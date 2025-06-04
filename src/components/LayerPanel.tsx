@@ -8,13 +8,16 @@ import {
     Select, 
     MenuItem,
     Tooltip,
-    Paper
+    Paper,
+    Switch,
+    Divider
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import LayersIcon from '@mui/icons-material/Layers';
 import { useLayers } from '../contexts/LayersContext';
 import AddLayerModal from './AddLayerModal';
 
@@ -152,6 +155,52 @@ function LayerPanel() {
         removeLayer(layerId);
     };
 
+    const handleAlphaVisibilityToggle = (layerId: string) => (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const layer = layers.find(l => l.id === layerId);
+        if (layer) {
+            // Просто переключаем видимость альфа-канала без изменения данных
+            updateLayer(layerId, { 
+                alphaVisible: !layer.alphaVisible
+            });
+        }
+    };
+
+    const handleRemoveAlpha = (layerId: string) => async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const layer = layers.find(l => l.id === layerId);
+        if (layer && layer.imageData && layer.hasAlpha) {
+            // Создаем копию изображения
+            const tempImageData = new ImageData(
+                new Uint8ClampedArray(layer.imageData.data),
+                layer.imageData.width,
+                layer.imageData.height
+            );
+
+            // Просто делаем все пиксели непрозрачными, сохраняя их цвета
+            for (let i = 3; i < tempImageData.data.length; i += 4) {
+                tempImageData.data[i] = 255;
+            }
+
+            // Создаем новый ImageBitmap из обновленных данных
+            const tempCanvas = new OffscreenCanvas(layer.width, layer.height);
+            const ctx = tempCanvas.getContext('2d');
+            if (ctx) {
+                ctx.putImageData(tempImageData, 0, 0);
+                const newImageBitmap = await createImageBitmap(tempCanvas);
+
+                // Обновляем слой, делая все пиксели непрозрачными и удаляя альфа-канал
+                updateLayer(layerId, { 
+                    imageData: tempImageData,
+                    baseImageData: tempImageData,
+                    imageBitmap: newImageBitmap,
+                    hasAlpha: false,
+                    alphaVisible: false
+                });
+            }
+        }
+    };
+
     return (
         <LayerPanelContainer>
             <LayerHeader>
@@ -255,6 +304,37 @@ function LayerPanel() {
                                     ))}
                                 </Select>
                             </Tooltip>
+                        </Box>
+
+                        <Divider sx={{ my: 1 }} />
+                        
+                        <Box px={1}>
+                            <Typography variant="caption" display="block" gutterBottom>
+                                Альфа-канал
+                            </Typography>
+                            <Box display="flex" alignItems="center" justifyContent="space-between">
+                                <Tooltip title={layer.hasAlpha ? "Показать/скрыть альфа-канал" : "Слой не имеет альфа-канала"}>
+                                    <span>
+                                        <Switch
+                                            size="small"
+                                            checked={layer.alphaVisible}
+                                            onChange={(e) => handleAlphaVisibilityToggle(layer.id)(e as any)}
+                                            disabled={!layer.hasAlpha}
+                                        />
+                                    </span>
+                                </Tooltip>
+                                <Tooltip title={layer.hasAlpha ? "Удалить альфа-канал" : "Слой не имеет альфа-канала"}>
+                                    <span>
+                                        <IconButton
+                                            size="small"
+                                            onClick={handleRemoveAlpha(layer.id)}
+                                            disabled={!layer.hasAlpha}
+                                        >
+                                            <LayersIcon />
+                                        </IconButton>
+                                    </span>
+                                </Tooltip>
+                            </Box>
                         </Box>
                     </LayerItem>
                 ))}

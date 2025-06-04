@@ -1,3 +1,5 @@
+import { Kernel } from '../utils/kernels';
+
 interface GB7Data {
     width: number;
     height: number;
@@ -27,29 +29,25 @@ interface PixelArray {
 interface Layer {
     id: string;
     name: string;
-    visible: boolean;
-    opacity: number;
-    blendMode: GlobalCompositeOperation;
     imageData: ImageData | null;
     imageBitmap: ImageBitmap | null;
     baseImageData: ImageData | null;
-    baseImageBitmap: ImageBitmap | null;
-    originalImageData: ImageData | null;
+    visible: boolean;
+    opacity: number;
+    blendMode: GlobalCompositeOperation;
     width: number;
     height: number;
     scale: number;
-    curvePoints: {
+    curvePoints?: {
         point1: { x: number; y: number };
         point2: { x: number; y: number };
-    } | null;
-    kernelValues: number[][] | null;
-    infoPanel: {
-        colorDepth: number;
-        format: string;
-        source: string | null | File;
-        width: number;
-        height: number;
     };
+    kernelValues?: Kernel;
+    infoPanel: {
+        [key: string]: any;
+    };
+    alphaVisible: boolean;  // Видимость альфа-канала
+    hasAlpha: boolean;      // Наличие альфа-канала
 }
 
 export type { GB7Data, CanvasImageData, PixelArray, Layer };
