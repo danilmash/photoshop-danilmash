@@ -37,7 +37,7 @@ export default function SaveImageButton(props: {
     const [filename, setFilename] = useState('image');
     const [quality, setQuality] = useState<number>(92);
     
-    const { layers, processLayers } = useLayers();
+    const { layers, processLayers, getMaxWidthAndHeight } = useLayers();
     
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -60,7 +60,7 @@ export default function SaveImageButton(props: {
     const handleSave = async () => {
         if (layers.length === 0) return;
         
-        const { width, height } = layers[0];
+        const { width, height } = getMaxWidthAndHeight();
         const { imageData } = await processLayers(width, height, 100);
         
         try {
