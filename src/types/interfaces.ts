@@ -32,6 +32,7 @@ interface Layer {
     imageData: ImageData | null;
     imageBitmap: ImageBitmap | null;
     baseImageData: ImageData | null;
+    originalImageData: ImageData | null;
     visible: boolean;
     opacity: number;
     blendMode: GlobalCompositeOperation;

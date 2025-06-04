@@ -98,6 +98,7 @@ function AddLayerModal() {
             imageData: imageData,
             imageBitmap: imageBitmap,
             baseImageData: imageData,
+            originalImageData: imageData,
             width: canvas.width,
             height: canvas.height,
             scale: 100,

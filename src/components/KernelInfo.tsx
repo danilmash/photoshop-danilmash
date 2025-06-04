@@ -199,7 +199,7 @@ export default function KernelInfo() {
                 imageBitmap: newImageBitmap,
                 width: finalWidth,
                 height: finalHeight,
-                kernelValues: null // Сбрасываем значения фильтра
+                kernelValues: undefined // Используем undefined вместо null
             });
         }
     };

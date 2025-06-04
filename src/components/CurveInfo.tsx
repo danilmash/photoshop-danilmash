@@ -257,7 +257,7 @@ export default function CurveInfo() {
                         activeLayer.originalImageData!.height
                     ),
                     imageBitmap,
-                    curvePoints: null
+                    curvePoints: undefined
                 });
             });
         }
