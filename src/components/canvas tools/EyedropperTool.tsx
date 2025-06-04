@@ -14,6 +14,25 @@ function EyedropperTool() {
     const { image, baseImage, scale } = useImageData();
     const { processLayers } = useLayers();
 
+    // Обработчик хоткея
+    useEffect(() => {
+        const handleKeyPress = (event: KeyboardEvent) => {
+            // Проверяем, что не находимся в текстовом поле
+            if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+                return;
+            }
+            
+            if (event.key.toLowerCase() === 'i') {
+                tools.setActiveTool("eyedropper");
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => {
+            window.removeEventListener('keydown', handleKeyPress);
+        };
+    }, [tools]);
+
     async function getColor(coordinates: { x: number; y: number }) {
         const { imageData } = await processLayers(baseImage.width, baseImage.height, 100);
         if (!imageData) return;
@@ -77,7 +96,7 @@ function EyedropperTool() {
 
     return (
         <Tooltip
-            title="Пипетка: клик для выбора основного цвета, Ctrl+клик для дополнительного цвета"
+            title="Пипетка: клик для выбора основного цвета, Ctrl+клик для дополнительного цвета (I)"
             placement="bottom"
         >
             <IconButton

@@ -19,6 +19,26 @@ function PanTool() {
     const [isDragging, setIsDragging] = useState(false);
     const maxOffsetX = useRef(0);
     const maxOffsetY = useRef(0);
+
+    // Обработчик хоткея
+    useEffect(() => {
+        const handleKeyPress = (event: KeyboardEvent) => {
+            // Проверяем, что не находимся в текстовом поле
+            if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+                return;
+            }
+            
+            if (event.key.toLowerCase() === 'h') {
+                setActiveTool("pan");
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => {
+            window.removeEventListener('keydown', handleKeyPress);
+        };
+    }, [setActiveTool]);
+
     const handleMouseDown = (event: MouseEvent) => {
         if (activeTool !== "pan") return;
         setLastMouseX(event.clientX);
@@ -115,7 +135,7 @@ function PanTool() {
 
     return (
         <Tooltip
-            title="Инструмент рука: позволяет перемещать изображение"
+            title="Инструмент рука: позволяет перемещать изображение (H)"
             placement="bottom"
         >
             <IconButton
